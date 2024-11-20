@@ -53,7 +53,7 @@ public partial class PointPlacer : Control
     }
 
     /// <inheritdoc/>
-    /// <remarks>Adds <see cref="Point"/> to bve drawn to the containing canvas.</remarks>
+    /// <remarks>Adds <see cref="Point"/> to be drawn to the containing canvas.</remarks>
     public override void _Input(InputEvent @event)
     {
         // Shhh we're not here
