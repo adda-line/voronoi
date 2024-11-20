@@ -38,7 +38,7 @@ public partial class PointPlacer : Control
         }
     }
 
-    [Export(PropertyHint.ColorNoAlpha)]
+    [Export]
     public bool ShowCoords
     {
         get => _showCoords;
