@@ -3,7 +3,7 @@ using Godot;
 /// <summary>
 /// Places points in the containing canvas layer.
 /// </summary>
-public partial class PointPlacer : Node2D
+public partial class PointPlacer : Control
 {
     /// <inheritdoc/>
     /// <remarks>Adds <see cref="Point"/> to bve drawn to the containing canvas.</remarks>
@@ -18,9 +18,11 @@ public partial class PointPlacer : Node2D
             mb.Pressed &&
             mb.ButtonIndex == MouseButton.Left)
         {
+            // Mouse position is in Viewport coords - move into canvas
+            var canvasPosition = GetCanvasTransform() * mb.Position;
             var site = new Point
             {
-                Position = mb.Position
+                Position = canvasPosition
             };
             AddChild(site, @internal: InternalMode.Front);
             GetViewport().SetInputAsHandled();

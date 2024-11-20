@@ -7,9 +7,8 @@ public partial class Point : Area2D
     /// <inheritdoc/>
     public override void _Draw()
     {
-        // TODO: Looking at canvasPos while debugging, why is it (0,0)?
-        var canvasPos = MakeCanvasPositionLocal(Position);
-        DrawCircle(canvasPos, POINT_RADIUS, Colors.Red);
-        DrawString(ThemeDB.FallbackFont, canvasPos, $"({(int)GlobalPosition.X},{(int)GlobalPosition.Y})");
+        // We're drawing in local coords, NOT the containing canvas' coords.
+        DrawCircle(Vector2.Zero, POINT_RADIUS, Colors.Red);
+        this.DrawCenteredString(ThemeDB.FallbackFont, new Vector2(0, -20), $"({(int)GlobalPosition.X}, {(int)GlobalPosition.Y})");
     }
 }
