@@ -9,6 +9,8 @@ public partial class PointPlacer : Control
     private Color _pointColor = Colors.Black;
     private bool _showCoords = true;
 
+    private Grid _grid = null;
+
     [ExportCategory("Point Settings")]
     [Export(PropertyHint.Range, "1,10,0.1")]
     public float PointRadius
@@ -52,6 +54,20 @@ public partial class PointPlacer : Control
         }
     }
 
+    [Export]
+    public Grid Grid
+    {
+        get => _grid;
+        set
+        {
+            _grid = value;
+            for (int i = 0; i < GetChildCount(true); i++)
+            {
+                GetChild<Draggable<Point>>(i, true).Grid = _grid;
+            }
+        }
+    }
+
     /// <inheritdoc/>
     /// <remarks>Adds <see cref="Point"/> to be drawn to the containing canvas.</remarks>
     public override void _Input(InputEvent @event)
@@ -69,7 +85,8 @@ public partial class PointPlacer : Control
             var canvasPosition = GetCanvasTransform() * mb.Position;
             var site = new Draggable<Point>(new Point(PointRadius, PointColor, ShowCoords))
             {
-                Position = canvasPosition
+                Position = canvasPosition,
+                Grid = _grid
             };
             AddChild(site, @internal: InternalMode.Front);
             GetViewport().SetInputAsHandled();

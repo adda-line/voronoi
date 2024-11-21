@@ -1,5 +1,6 @@
 ﻿using Godot;
 
+[GlobalClass]
 public partial class Grid : Control
 {
     private float _stepSize = 5.0f;
