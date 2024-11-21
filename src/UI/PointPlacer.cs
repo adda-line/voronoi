@@ -19,7 +19,7 @@ public partial class PointPlacer : Control
             _pointRadius = value;
             for (int i = 0; i < GetChildCount(true); i++)
             {
-                GetChild<Point>(i, true).Radius = _pointRadius;
+                GetChild<Draggable<Point>>(i, true).Value.Radius = _pointRadius;
             }
         }
     }
@@ -33,7 +33,7 @@ public partial class PointPlacer : Control
             _pointColor = value;
             for (int i = 0; i < GetChildCount(true); i++)
             {
-                GetChild<Point>(i, true).Color = _pointColor;
+                GetChild<Draggable<Point>>(i, true).Value.Color = _pointColor;
             }
         }
     }
@@ -47,7 +47,7 @@ public partial class PointPlacer : Control
             _showCoords = value;
             for (int i = 0; i < GetChildCount(true); i++)
             {
-                GetChild<Point>(i, true).ShowCoords = _showCoords;
+                GetChild<Draggable<Point>>(i, true).Value.ShowCoords = _showCoords;
             }
         }
     }
@@ -67,7 +67,7 @@ public partial class PointPlacer : Control
         {
             // Mouse position is in Viewport coords - move into canvas
             var canvasPosition = GetCanvasTransform() * mb.Position;
-            var site = new Point(PointRadius, PointColor, ShowCoords)
+            var site = new Draggable<Point>(new Point(PointRadius, PointColor, ShowCoords))
             {
                 Position = canvasPosition
             };
