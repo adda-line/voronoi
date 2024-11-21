@@ -11,7 +11,9 @@ public partial class Point : Area2D
         get => _radius;
         set
         {
+            // TODO: This feels hacky but I'm not sure what would be better....
             _radius = Mathf.Abs(value);
+            ((CircleShape2D)GetChild<CollisionShape2D>(0, true).Shape).Radius = value;
             QueueRedraw();
         }
     }
@@ -41,6 +43,14 @@ public partial class Point : Area2D
         _radius = Mathf.Abs(radius);
         _color = color;
         _showCoords = showCoords;
+
+        AddChild(new CollisionShape2D()
+        {
+            Shape = new CircleShape2D()
+            {
+                Radius = _radius
+            }
+        }, @internal: InternalMode.Front);
     }
 
     /// <inheritdoc/>
