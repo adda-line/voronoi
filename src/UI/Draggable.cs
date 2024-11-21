@@ -46,7 +46,13 @@ public partial class Draggable<T> : Node2D
         if (mb.ButtonIndex == MouseButton.Left)
         {
             if (mb.IsPressed() && _mouseIsOver)
+            {
                 _isHeld = true;
+
+                // Don't want this to propagate to overzealous controls
+                // *cough* *cough* _PointPlacer_
+                GetViewport().SetInputAsHandled();
+            }
             else if (mb.IsReleased())
                 _isHeld = false;
         }
