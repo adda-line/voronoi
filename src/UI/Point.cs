@@ -1,11 +1,16 @@
 using Godot;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-public partial class Point : Area2D, IDeepCloneable<Point>
+public partial class Point : Area2D, IDeepCloneable<Point>, INotifyPropertyChanged
 {
     private readonly CircleCollisionShape2D _collider;
 
     private Color _color;
     private bool _showCoords;
+
+    /// <inheritdoc/>
+    public event PropertyChangedEventHandler PropertyChanged = delegate { };
 
     public float Radius
     {
@@ -13,7 +18,7 @@ public partial class Point : Area2D, IDeepCloneable<Point>
         set
         {
             _collider.Radius = Mathf.Abs(value);
-            QueueRedraw();
+            NotifyPropertyChanged();
         }
     }
 
@@ -23,7 +28,7 @@ public partial class Point : Area2D, IDeepCloneable<Point>
         set
         {
             _color = value;
-            QueueRedraw();
+            NotifyPropertyChanged();
         }
     }
 
@@ -33,7 +38,7 @@ public partial class Point : Area2D, IDeepCloneable<Point>
         set
         {
             _showCoords = value;
-            QueueRedraw();
+            NotifyPropertyChanged();
         }
     }
 
@@ -75,4 +80,16 @@ public partial class Point : Area2D, IDeepCloneable<Point>
 
     /// <inheritdoc/>
     IDeepCloneable IDeepCloneable.DeepClone() => DeepClone();
+
+    /// <summary>
+    /// Fires the <see cref="PropertyChanged"/> event and queues a redraw if requested.
+    /// </summary>
+    /// <param name="property">Property that's changing.</param>
+    /// <param name="requiresRedraw">Whether to redraw.</param>
+    private void NotifyPropertyChanged([CallerMemberName]string property = null, bool requiresRedraw = true)
+    {
+        PropertyChanged(this, new PropertyChangedEventArgs(property));
+        if (requiresRedraw)
+            QueueRedraw();
+    }
 }
