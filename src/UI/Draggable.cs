@@ -1,5 +1,4 @@
 ﻿using Godot;
-using System.Xml.Serialization;
 
 public partial class Draggable<T> : Node2D
     where T : Area2D, IDeepCloneable<T>
