@@ -1,6 +1,7 @@
 ﻿using Godot;
 
 [GlobalClass]
+[Tool]
 public partial class Grid : Control
 {
     private const int DefaultGridSize = 25;
@@ -34,20 +35,19 @@ public partial class Grid : Control
     {
         if (_showGrid)
         {
-            var viewportSize = GetViewportRect().Size;
-            int verticalLinesToPlace = (int)(viewportSize.X / _stepSize.X) + 1;
+            int verticalLinesToPlace = (int)(Size.X / _stepSize.X) + 1;
             for (int i = 0;  i < verticalLinesToPlace; i++)
             {
                 var from = new Vector2(i * _stepSize.X, 0);
-                var to = new Vector2(i * _stepSize.X, viewportSize.Y);
+                var to = new Vector2(i * _stepSize.X, Size.Y);
                 DrawLine(from, to, Colors.DarkGray);
             }
 
-            int horizontalLinesToPlace = (int)(viewportSize.Y / _stepSize.Y) + 1;
+            int horizontalLinesToPlace = (int)(Size.Y / _stepSize.Y) + 1;
             for (int i = 0; i < horizontalLinesToPlace; i++)
             {
                 var from = new Vector2(0, i * _stepSize.Y);
-                var to = new Vector2(viewportSize.X, i * _stepSize.Y);
+                var to = new Vector2(Size.X, i * _stepSize.Y);
                 DrawLine(from, to, Colors.DarkGray);
             }
         }
