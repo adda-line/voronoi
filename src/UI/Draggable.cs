@@ -99,7 +99,7 @@ public partial class Draggable<T> : Node2D
                 // *cough* *cough* _PointPlacer_
                 GetViewport().SetInputAsHandled();
             }
-            else if (mb.IsReleased())
+            else if (mb.IsReleased() && _isHeld)
             {
                 _isHeld = false;
                 RemoveGhost();

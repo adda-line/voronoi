@@ -21,7 +21,7 @@ public partial class PointPlacer : Control
         set
         {
             _pointRadius = value;
-            foreach (var point in Points)
+            foreach (var point in GetPoints())
             {
                 point.Radius = _pointRadius;
             }
@@ -35,7 +35,7 @@ public partial class PointPlacer : Control
         set
         {
             _pointColor = value;
-            foreach (var point in Points)
+            foreach (var point in GetPoints())
             {
                 point.Color = _pointColor;
             }
@@ -49,7 +49,7 @@ public partial class PointPlacer : Control
         set
         {
             _showCoords = value;
-            foreach (var point in Points)
+            foreach (var point in GetPoints())
             {
                 point.ShowCoords = _showCoords;
             }
@@ -69,8 +69,6 @@ public partial class PointPlacer : Control
             }
         }
     }
-
-    public IEnumerable<Point> Points => GetPoints();
 
     public event CollisionObjectMovedEventHandler<Point> PointMoved = delegate { };
 
