@@ -68,6 +68,14 @@ public partial class Draggable<T> : Node2D
         if (@event.IsActionReleased("drag_snap_to_grid"))
             _snapToGrid = false;
 
+        // Handle drag cancels
+        if (_isHeld && @event.IsActionPressed("drag_cancel"))
+        {
+            _isHeld = false;
+            Position = _ghost.Position;
+            RemoveGhost();
+        }
+
         if (@event is not InputEventMouseButton mb)
             return;
 
@@ -90,11 +98,23 @@ public partial class Draggable<T> : Node2D
             else if (mb.IsReleased())
             {
                 _isHeld = false;
-
-                RemoveChild(_ghost);
-                _ghost = null;
+                RemoveGhost();
             }
         }
+    }
+
+    /// <summary>
+    /// Removes <see cref="_ghost"/> from the tree, frees it, and sets <see cref="_ghost"/> to null.
+    /// </summary>
+    private void RemoveGhost()
+    {
+        // Nothing to see here *whistling intensifies*
+        if (_ghost == null)
+            return;
+
+        RemoveChild(_ghost);
+        _ghost.QueueFree();
+        _ghost = null;
     }
 
     /// <summary>
