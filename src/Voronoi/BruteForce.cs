@@ -24,8 +24,6 @@ public partial class BruteForce : TextureRect
     public override void _Ready()
     {
         Texture = _tex;
-        if (_siteContainer == null)
-            GD.Print("FUCK");
     }
 
     public override void _Draw()
