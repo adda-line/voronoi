@@ -27,7 +27,7 @@ public partial class Draggable<T> : Node2D
         Value.MouseEntered += Value_MouseEntered;
         Value.MouseExited += Value_MouseExited;
 
-        // If we're operating on something that will notify us, let's match it's ghost real-time!
+        // If we're operating on something that will notify us, let's match its ghost real-time!
         if (Value is INotifyPropertyChanged changeNotifier)
             changeNotifier.PropertyChanged += Value_PropertyChanged;
 
