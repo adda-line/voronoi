@@ -35,7 +35,7 @@ public partial class Draggable<T> : Node2D
 
             Vector2 newPosition;
             if (_snapToGrid && Grid != null)
-                newPosition = mousePos.Snapped(Grid.StepSize);
+                newPosition = mousePos.Snapped(Grid.Basis);
             else
                 newPosition = GlobalPosition.Lerp(GetGlobalMousePosition(), (float)(delta * MOVE_SPEED));
 

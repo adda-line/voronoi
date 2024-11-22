@@ -6,30 +6,30 @@ public partial class Grid : Control
 {
     private const int DefaultGridSize = 25;
 
-    private Vector2 _stepSize = new(DefaultGridSize, DefaultGridSize);
-    private bool _showGrid = true;
+    private Vector2 _basis = new(DefaultGridSize, DefaultGridSize);
+    private bool _linesVisible = true;
     private Color _lineColor = Colors.DarkGray;
-    private int _thickness = 2;
+    private int _lineThickness = 2;
 
     [Export(PropertyHint.Link, "5,100,.5")]
-    public Vector2 StepSize
+    public Vector2 Basis
     {
-        get => _stepSize;
+        get => _basis;
         set
         {
-            _stepSize = value;
+            _basis = value;
             QueueRedraw();
         }
     }
 
     [ExportSubgroup("Grid Lines")]
     [Export]
-    public bool ShowGrid
+    public bool IsVisible
     {
-        get => _showGrid;
+        get => _linesVisible;
         set
         {
-            _showGrid = value;
+            _linesVisible = value;
             QueueRedraw();
         }
     }
@@ -46,34 +46,35 @@ public partial class Grid : Control
     }
 
     [Export(PropertyHint.Range, "1,5,1")]
-    public int LineThickness
+    public int Thickness
     {
-        get => _thickness;
+        get => _lineThickness;
         set
         {
-            _thickness = value;
+            _lineThickness = value;
             QueueRedraw();
         }
     }
 
+    /// <inheritdoc/>
     public override void _Draw()
     {
-        if (_showGrid)
+        if (_linesVisible)
         {
-            int verticalLinesToPlace = (int)(Size.X / _stepSize.X) + 1;
+            int verticalLinesToPlace = (int)(Size.X / _basis.X) + 1;
             for (int i = 0;  i < verticalLinesToPlace; i++)
             {
-                var from = new Vector2(i * _stepSize.X, 0);
-                var to = new Vector2(i * _stepSize.X, Size.Y);
-                DrawLine(from, to, Color, _thickness);
+                var from = new Vector2(i * _basis.X, 0);
+                var to = new Vector2(i * _basis.X, Size.Y);
+                DrawLine(from, to, Color, _lineThickness);
             }
 
-            int horizontalLinesToPlace = (int)(Size.Y / _stepSize.Y) + 1;
+            int horizontalLinesToPlace = (int)(Size.Y / _basis.Y) + 1;
             for (int i = 0; i < horizontalLinesToPlace; i++)
             {
-                var from = new Vector2(0, i * _stepSize.Y);
-                var to = new Vector2(Size.X, i * _stepSize.Y);
-                DrawLine(from, to, Color, _thickness);
+                var from = new Vector2(0, i * _basis.Y);
+                var to = new Vector2(Size.X, i * _basis.Y);
+                DrawLine(from, to, Color, _lineThickness);
             }
         }
     }
