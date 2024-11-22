@@ -1,8 +1,10 @@
 using Godot;
+using System.Collections.Generic;
 
 /// <summary>
 /// Places points in the containing canvas layer.
 /// </summary>
+[GlobalClass]
 public partial class PointPlacer : Control
 {
     private float _pointRadius = 2.5f;
@@ -19,9 +21,9 @@ public partial class PointPlacer : Control
         set
         {
             _pointRadius = value;
-            for (int i = 0; i < GetChildCount(true); i++)
+            foreach (var point in Points)
             {
-                GetChild<Draggable<Point>>(i, true).Value.Radius = _pointRadius;
+                point.Radius = _pointRadius;
             }
         }
     }
@@ -33,9 +35,9 @@ public partial class PointPlacer : Control
         set
         {
             _pointColor = value;
-            for (int i = 0; i < GetChildCount(true); i++)
+            foreach (var point in Points)
             {
-                GetChild<Draggable<Point>>(i, true).Value.Color = _pointColor;
+                point.Color = _pointColor;
             }
         }
     }
@@ -47,9 +49,9 @@ public partial class PointPlacer : Control
         set
         {
             _showCoords = value;
-            for (int i = 0; i < GetChildCount(true); i++)
+            foreach (var point in Points)
             {
-                GetChild<Draggable<Point>>(i, true).Value.ShowCoords = _showCoords;
+                point.ShowCoords = _showCoords;
             }
         }
     }
@@ -67,6 +69,10 @@ public partial class PointPlacer : Control
             }
         }
     }
+
+    public IEnumerable<Point> Points => GetPoints();
+
+    public event CollisionObjectMovedEventHandler<Point> PointMoved = delegate { };
 
     /// <inheritdoc/>
     /// <remarks>Adds <see cref="Point"/> to be drawn to the containing canvas.</remarks>
@@ -88,8 +94,19 @@ public partial class PointPlacer : Control
                 Position = canvasPosition,
                 Grid = _grid
             };
+            site.Moved += obj => PointMoved(obj);
             AddChild(site, @internal: InternalMode.Front);
             GetViewport().SetInputAsHandled();
+        }
+    }
+
+    private IEnumerable<Point> GetPoints()
+    {
+        for (int i = 0; i < GetChildCount(true); ++i)
+        {
+            var child = GetChild(i, true);
+            if (child is Draggable<Point> dragPoint)
+                yield return dragPoint.Value;
         }
     }
 }

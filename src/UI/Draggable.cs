@@ -1,6 +1,8 @@
 ﻿using Godot;
 using System.ComponentModel;
 
+public delegate void CollisionObjectMovedEventHandler<T>(T obj);
+
 public partial class Draggable<T> : Node2D
     where T : CollisionObject2D, IDeepCloneable<T>
 {
@@ -11,6 +13,8 @@ public partial class Draggable<T> : Node2D
     private bool _mouseIsOver = false;
     private bool _isHeld = false;
     private bool _snapToGrid = false;
+
+    public event CollisionObjectMovedEventHandler<T> Moved = delegate { };
 
     public T Value { get; private set; }
 
@@ -99,6 +103,7 @@ public partial class Draggable<T> : Node2D
             {
                 _isHeld = false;
                 RemoveGhost();
+                Moved(Value);
             }
         }
     }
