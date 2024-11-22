@@ -1,9 +1,12 @@
 ﻿using Godot;
+using System.Xml.Serialization;
 
 public partial class Draggable<T> : Node2D
-    where T : Area2D
+    where T : Area2D, IDeepCloneable<T>
 {
     private const float MOVE_SPEED = 50f;
+
+    private Area2D _ghost;
 
     private bool _mouseIsOver = false;
     private bool _isHeld = false;
@@ -24,6 +27,13 @@ public partial class Draggable<T> : Node2D
         Value.MouseEntered += Item_MouseEntered;
         Value.MouseExited += Item_MouseExited;
         AddChild(Value);
+
+        // This will be the "ghost" left behind when we start to drag something.
+        _ghost = Value.DeepClone();
+        _ghost.SelfModulate = new Color(1, 1, 1, 0.5f);
+        _ghost.Visible = false;
+        _ghost.TopLevel = true;
+        AddChild(_ghost);
     }
 
     /// <inheritdoc/>
@@ -70,12 +80,21 @@ public partial class Draggable<T> : Node2D
             {
                 _isHeld = true;
 
+                // Show the ghost where we're dragging from
+                _ghost.Position = Position;
+                _ghost.Visible = true;
+
                 // Don't want this to propagate to overzealous controls
                 // *cough* *cough* _PointPlacer_
                 GetViewport().SetInputAsHandled();
             }
             else if (mb.IsReleased())
+            {
                 _isHeld = false;
+
+                // Hide the ghost, it is no longer needed.
+                _ghost.Visible = false;
+            }
         }
     }
 
