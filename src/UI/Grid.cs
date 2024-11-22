@@ -8,6 +8,8 @@ public partial class Grid : Control
 
     private Vector2 _stepSize = new(DefaultGridSize, DefaultGridSize);
     private bool _showGrid = true;
+    private Color _lineColor = Colors.DarkGray;
+    private int _thickness = 2;
 
     [Export(PropertyHint.Link, "5,100,.5")]
     public Vector2 StepSize
@@ -20,13 +22,36 @@ public partial class Grid : Control
         }
     }
 
+    [ExportSubgroup("Grid Lines")]
     [Export]
-    public bool ShowGridLines
+    public bool ShowGrid
     {
         get => _showGrid;
         set
         {
             _showGrid = value;
+            QueueRedraw();
+        }
+    }
+
+    [Export(PropertyHint.ColorNoAlpha)]
+    public Color Color
+    {
+        get => _lineColor;
+        set
+        {
+            _lineColor = value;
+            QueueRedraw();
+        }
+    }
+
+    [Export(PropertyHint.Range, "1,5,1")]
+    public int LineThickness
+    {
+        get => _thickness;
+        set
+        {
+            _thickness = value;
             QueueRedraw();
         }
     }
@@ -40,7 +65,7 @@ public partial class Grid : Control
             {
                 var from = new Vector2(i * _stepSize.X, 0);
                 var to = new Vector2(i * _stepSize.X, Size.Y);
-                DrawLine(from, to, Colors.DarkGray);
+                DrawLine(from, to, Color, _thickness);
             }
 
             int horizontalLinesToPlace = (int)(Size.Y / _stepSize.Y) + 1;
@@ -48,7 +73,7 @@ public partial class Grid : Control
             {
                 var from = new Vector2(0, i * _stepSize.Y);
                 var to = new Vector2(Size.X, i * _stepSize.Y);
-                DrawLine(from, to, Colors.DarkGray);
+                DrawLine(from, to, Color, _thickness);
             }
         }
     }
