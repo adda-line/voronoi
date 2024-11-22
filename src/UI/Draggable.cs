@@ -26,13 +26,6 @@ public partial class Draggable<T> : Node2D
         Value.MouseEntered += Item_MouseEntered;
         Value.MouseExited += Item_MouseExited;
         AddChild(Value);
-
-        // This will be the "ghost" left behind when we start to drag something.
-        _ghost = Value.DeepClone();
-        _ghost.SelfModulate = new Color(1, 1, 1, 0.5f);
-        _ghost.Visible = false;
-        _ghost.TopLevel = true;
-        AddChild(_ghost);
     }
 
     /// <inheritdoc/>
@@ -79,9 +72,8 @@ public partial class Draggable<T> : Node2D
             {
                 _isHeld = true;
 
-                // Show the ghost where we're dragging from
-                _ghost.Position = Position;
-                _ghost.Visible = true;
+                // This will be the "ghost" left behind when we start to drag something.
+                SpawnGhost();
 
                 // Don't want this to propagate to overzealous controls
                 // *cough* *cough* _PointPlacer_
@@ -91,10 +83,40 @@ public partial class Draggable<T> : Node2D
             {
                 _isHeld = false;
 
-                // Hide the ghost, it is no longer needed.
-                _ghost.Visible = false;
+                RemoveGhost();
             }
         }
+    }
+
+    /// <summary>
+    /// Creates the ghost visage of <see cref="Value"/> at the position at which it is first dragged.
+    /// Call when movement is started.
+    /// </summary>
+    private void SpawnGhost()
+    {
+        _ghost = Value.DeepClone();
+        _ghost.SelfModulate = new Color(1, 1, 1, 0.5f);
+        _ghost.Visible = true;
+        _ghost.TopLevel = true;
+        _ghost.Position = Position;
+        AddChild(_ghost);
+    }
+
+    /// <summary>
+    /// Removes the ghost of the moved item.
+    /// Call when no longer moving.
+    /// </summary>
+    private void RemoveGhost()
+    {
+        // Let's not die but we _should_ complain.
+        if (_ghost == null)
+        {
+            GD.PrintErr("Ghost removal requested when there is no ghost to be removed.");
+            return;
+        }
+
+        RemoveChild(_ghost);
+        _ghost = null;
     }
 
     private void Item_MouseEntered()
