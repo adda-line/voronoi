@@ -3,11 +3,13 @@
 [GlobalClass]
 public partial class Grid : Control
 {
-    private float _stepSize = 5.0f;
+    private const int DefaultGridSize = 25;
+
+    private Vector2 _stepSize = new(DefaultGridSize, DefaultGridSize);
     private bool _showGrid = true;
 
-    [Export(PropertyHint.Range, "5,20,.5")]
-    public float StepSize
+    [Export(PropertyHint.Link, "5,100,.5")]
+    public Vector2 StepSize
     {
         get => _stepSize;
         set
@@ -33,19 +35,19 @@ public partial class Grid : Control
         if (_showGrid)
         {
             var viewportSize = GetViewportRect().Size;
-            int verticalLinesToPlace = (int)(viewportSize.X / _stepSize) + 1;
+            int verticalLinesToPlace = (int)(viewportSize.X / _stepSize.X) + 1;
             for (int i = 0;  i < verticalLinesToPlace; i++)
             {
-                var from = new Vector2(i * _stepSize, 0);
-                var to = new Vector2(i * _stepSize, viewportSize.Y);
+                var from = new Vector2(i * _stepSize.X, 0);
+                var to = new Vector2(i * _stepSize.X, viewportSize.Y);
                 DrawLine(from, to, Colors.DarkGray);
             }
 
-            int horizontalLinesToPlace = (int)(viewportSize.Y / _stepSize) + 1;
+            int horizontalLinesToPlace = (int)(viewportSize.Y / _stepSize.Y) + 1;
             for (int i = 0; i < horizontalLinesToPlace; i++)
             {
-                var from = new Vector2(0, i * _stepSize);
-                var to = new Vector2(viewportSize.X, i * _stepSize);
+                var from = new Vector2(0, i * _stepSize.Y);
+                var to = new Vector2(viewportSize.X, i * _stepSize.Y);
                 DrawLine(from, to, Colors.DarkGray);
             }
         }

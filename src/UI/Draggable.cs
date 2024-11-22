@@ -35,15 +35,11 @@ public partial class Draggable<T> : Node2D
 
             Vector2 newPosition;
             if (_snapToGrid && Grid != null)
-            {
-                // TODO: the grid should have configurable X and Y components
-                var step = new Vector2(Grid.StepSize, Grid.StepSize);
-                newPosition = mousePos.Snapped(step);
-            }
+                newPosition = mousePos.Snapped(Grid.StepSize);
             else
-            {
                 newPosition = GlobalPosition.Lerp(GetGlobalMousePosition(), (float)(delta * MOVE_SPEED));
-            }
+
+            // Let's not queue a redraw if we can help it.
             if (newPosition.X > float.Epsilon || newPosition.Y > float.Epsilon)
             {
                 GlobalPosition = newPosition;
