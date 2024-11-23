@@ -25,7 +25,7 @@ public partial class BruteForce : TextureRect
             DetachFromSiteContainer();
             AttachToSiteContainer(value);
             if (_siteContainer != null)
-                QueueRedraw();
+                StartRefresh();
         }
     }
 
@@ -137,11 +137,13 @@ public partial class BruteForce : TextureRect
 
     private static int FindIndexOfClosestSite(int x, int y, List<Vector2> sites)
     {
+        Vector2 pixelPos = new(x, y);
+
         int minIdx = 0;
         float minDst = float.PositiveInfinity;
         for (int idx = 0; idx < sites.Count; idx++)
         {
-            var dst = (sites[idx] - new Vector2I(x, y)).LengthSquared();
+            var dst = (sites[idx] - pixelPos).LengthSquared();
             if (dst < minDst)
             {
                 minIdx = idx;
