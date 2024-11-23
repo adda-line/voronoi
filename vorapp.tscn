@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://byeipo61w5qi0"]
+[gd_scene load_steps=4 format=3 uid="uid://byeipo61w5qi0"]
 
 [ext_resource type="Script" path="res://src/UI/PointPlacer.cs" id="1_oywdl"]
+[ext_resource type="Script" path="res://src/Voronoi/BruteForce.cs" id="2_ret4t"]
 [ext_resource type="Script" path="res://src/UI/Grid.cs" id="2_yt5d0"]
 
 [node name="VoronoiApp" type="Control"]
@@ -24,6 +25,16 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_yt5d0")
 Color = Color(0.201526, 0.201527, 0.201527, 1)
+
+[node name="BruteForce" type="TextureRect" parent="." node_paths=PackedStringArray("SiteContainer")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_ret4t")
+SiteContainer = NodePath("../PointPlacer")
 
 [node name="PointPlacer" type="Control" parent="." node_paths=PackedStringArray("Grid")]
 layout_mode = 1
