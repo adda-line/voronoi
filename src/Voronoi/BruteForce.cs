@@ -1,7 +1,6 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -90,8 +89,7 @@ public partial class BruteForce : TextureRect
 
     private void StartRefresh()
     {
-        if (_diagramTask != null &&
-            _diagramTask.Status != TaskStatus.Running)
+        if (_diagramTask?.Status == TaskStatus.Running)
         {
             _taskCanceler.Cancel();
             _diagramTask.Wait();
