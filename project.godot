@@ -17,7 +17,8 @@ config/icon="res://icon.svg"
 
 [dotnet]
 
-project/assembly_name="voronoi"
+project/assembly_name="__ROOT__"
+project/solution_directory="./src"
 
 [editor]
 
