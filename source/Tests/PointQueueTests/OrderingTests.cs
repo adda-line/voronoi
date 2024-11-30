@@ -6,7 +6,7 @@ public class OrderingTests
     public void PointsSortedByY()
     {
         // Arrange
-        EventQueue q = new();
+        DefaultEventQueue q = new();
         var first =  GetEvent(0, 1);
         var second = GetEvent(0, 2);
         var third =  GetEvent(0, 3);
@@ -27,7 +27,7 @@ public class OrderingTests
     public void DeferToXWhenYsEqual()
     {
         // Arrange
-        EventQueue q = new();
+        DefaultEventQueue q = new();
         var first = GetEvent(1, 0);
         var second = GetEvent(2, 0);
         var third = GetEvent(3, 0);
@@ -48,7 +48,7 @@ public class OrderingTests
     public void ThrowOnDuplicatePoints()
     {
         // Arrange
-        EventQueue q = new();
+        DefaultEventQueue q = new();
         var first = GetEvent(1, 1);
         var second = GetEvent(1, 1);
 

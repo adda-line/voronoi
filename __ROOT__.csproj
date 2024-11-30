@@ -4,7 +4,7 @@
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net7.0</TargetFramework>
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    
+
     <!-- Exclude test projects from the godot project - don't need those in a game/app! -->
     <DefaultItemExcludes>$(DefaultItemExcludes);source/Tests/**/*</DefaultItemExcludes>
   </PropertyGroup>
