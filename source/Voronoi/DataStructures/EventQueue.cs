@@ -1,18 +1,20 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("PointQueueTests")]
 internal class EventQueue
 {
-    public int Count => throw new NotImplementedException();
+    private readonly PriorityQueue<IEvent, IEvent> _events = new(new EventComparer());
 
-    public void Enqueue(IEvent _)
+    public int Count => _events.Count;
+
+    public void Enqueue(IEvent e)
     {
-        throw new NotImplementedException();
+        _events.Enqueue(e, e);
     }
 
     public IEvent Dequeue()
     {
-        throw new NotImplementedException();
+        return _events.Dequeue();
     }
 }

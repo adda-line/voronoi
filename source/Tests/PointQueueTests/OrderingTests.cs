@@ -54,7 +54,7 @@ public class OrderingTests
 
         // Assert on Act
         q.Enqueue(first);
-        Assert.Throws<Exception>(() =>
+        Assert.Throws<InvalidOperationException>(() =>
         {
             q.Enqueue(second);
         });
