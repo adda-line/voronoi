@@ -1,3 +1,5 @@
+using NSubstitute;
+
 public class OrderingTests
 {
     [Fact]
@@ -5,9 +7,9 @@ public class OrderingTests
     {
         // Arrange
         EventQueue q = new();
-        var first = new Godot.Vector2(0, 1);
-        var second = new Godot.Vector2(0, 2);
-        var third = new Godot.Vector2(0, 3);
+        var first =  GetEvent(0, 1);
+        var second = GetEvent(0, 2);
+        var third =  GetEvent(0, 3);
 
         // Act
         q.Enqueue(second);
@@ -26,9 +28,9 @@ public class OrderingTests
     {
         // Arrange
         EventQueue q = new();
-        var first = new Godot.Vector2(1, 0);
-        var second = new Godot.Vector2(2, 0);
-        var third = new Godot.Vector2(3, 0);
+        var first = GetEvent(1, 0);
+        var second = GetEvent(2, 0);
+        var third = GetEvent(3, 0);
 
         // Act
         q.Enqueue(second);
@@ -47,8 +49,8 @@ public class OrderingTests
     {
         // Arrange
         EventQueue q = new();
-        var first = new Godot.Vector2(1, 1);
-        var second = new Godot.Vector2(1, 1);
+        var first = GetEvent(1, 1);
+        var second = GetEvent(1, 1);
 
         // Assert on Act
         q.Enqueue(first);
@@ -56,5 +58,12 @@ public class OrderingTests
         {
             q.Enqueue(second);
         });
+    }
+
+    private static IEvent GetEvent(float x, float y)
+    {
+        var @event = Substitute.For<IEvent>();
+        @event.Position.Returns(new Godot.Vector2(x, y));
+        return @event;
     }
 }
