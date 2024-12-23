@@ -1,4 +1,4 @@
-using NSubstitute;
+using Godot;
 
 public class OrderingTests
 {
@@ -12,15 +12,22 @@ public class OrderingTests
         var third =  GetEvent(0, 3);
 
         // Act
-        q.Enqueue(second);
-        q.Enqueue(first);
-        q.Enqueue(third);
+        q.Initialize(second, first, third);
 
         // Assert
         Assert.Equal(3, q.Count);
-        Assert.Equal(first, q.Dequeue());
-        Assert.Equal(second, q.Dequeue());
-        Assert.Equal(third, q.Dequeue());
+
+        var lowestPriority = q.Dequeue();
+        Assert.Equal(first.X, lowestPriority.X);
+        Assert.Equal(first.Y, lowestPriority.Y);
+
+        lowestPriority = q.Dequeue();
+        Assert.Equal(second.X, lowestPriority.X);
+        Assert.Equal(second.Y, lowestPriority.Y);
+
+        lowestPriority = q.Dequeue();
+        Assert.Equal(third.X, lowestPriority.X);
+        Assert.Equal(third.Y, lowestPriority.Y);
     }
 
     [Fact]
@@ -33,15 +40,21 @@ public class OrderingTests
         var third = GetEvent(3, 0);
 
         // Act
-        q.Enqueue(second);
-        q.Enqueue(first);
-        q.Enqueue(third);
+        q.Initialize(second, first, third);
 
         // Assert
         Assert.Equal(3, q.Count);
-        Assert.Equal(first, q.Dequeue());
-        Assert.Equal(second, q.Dequeue());
-        Assert.Equal(third, q.Dequeue());
+        var lowestPriority = q.Dequeue();
+        Assert.Equal(first.X, lowestPriority.X);
+        Assert.Equal(first.Y, lowestPriority.Y);
+
+        lowestPriority = q.Dequeue();
+        Assert.Equal(second.X, lowestPriority.X);
+        Assert.Equal(second.Y, lowestPriority.Y);
+
+        lowestPriority = q.Dequeue();
+        Assert.Equal(third.X, lowestPriority.X);
+        Assert.Equal(third.Y, lowestPriority.Y);
     }
 
     [Fact]
@@ -53,17 +66,11 @@ public class OrderingTests
         var second = GetEvent(1, 1);
 
         // Assert on Act
-        q.Enqueue(first);
         Assert.Throws<InvalidOperationException>(() =>
         {
-            q.Enqueue(second);
+            q.Initialize(first, second);
         });
     }
 
-    private static IEvent GetEvent(float x, float y)
-    {
-        var @event = Substitute.For<IEvent>();
-        @event.Position.Returns(new Godot.Vector2(x, y));
-        return @event;
-    }
+    private static Vector2 GetEvent(float x, float y) => new(x, y);
 }

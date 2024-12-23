@@ -2,7 +2,7 @@ using Godot;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-public partial class Point : Area2D, IDeepCloneable<Point>, INotifyPropertyChanged, IEvent
+public partial class Point : Area2D, IDeepCloneable<Point>, INotifyPropertyChanged
 {
     private readonly CircleCollisionShape2D _collider;
 

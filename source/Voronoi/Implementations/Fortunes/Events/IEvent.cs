@@ -1,6 +1,6 @@
-﻿using Godot;
-
-public interface IEvent
+﻿public interface IEvent
 {
-    Vector2 Position { get; set; }
+    int X { get; }
+
+    int Y { get; }
 }
