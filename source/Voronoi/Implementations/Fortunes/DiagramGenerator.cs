@@ -67,19 +67,21 @@ internal class DiagramGenerator<TQ>
         //    the two new internal nodes will store the breakpoints.
         // TODO: Rebalance I guess?
         // Internal Node
-        Arc subtreeRoot = new Arc(e)
+        // TODO: Wait what should the site be for this node??
+        Arc subtreeRoot = new(e)
         {
             // Left Leaf
-            Left = new Arc(a.Site),
+            Left = new(a.Site),
 
             // Internal Node
-            Right = new Arc(e)
+            // TODO: Wait what should the site be for this node??
+            Right = new(e)
             {
                 // Middle Leaf
-                Left = new Arc(e),
+                Left = new(e),
 
                 // Right Leaf
-                Right = new Arc(a.Site)
+                Right = new(a.Site)
             }
         };
         a.ReplaceWith(subtreeRoot);
