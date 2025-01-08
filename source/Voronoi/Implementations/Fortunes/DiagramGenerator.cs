@@ -62,29 +62,27 @@ internal class DiagramGenerator<TQ>
             a.ClosingEvent = null;
         }
 
-        // 3. Replace a with a new subtree containing 3 leaves. The middle leaf
+        // 3. Replace a with new subtree containing 3 leaves. The middle leaf
         //    will be the arc defined by e, the other 2 leaves will be a, and
         //    the two new internal nodes will store the breakpoints.
-        // TODO: Rebalance I guess?
-        // Internal Node
-        // TODO: Wait what should the site be for this node??
-        Arc subtreeRoot = new(e)
+        //    We will be using a as the subtree root.
+        //    TODO: Rebalance here
+        // Left Leaf
+        a.Left = new(a.Site);
+
+        // New Internal Node
+        a.Right = new()
         {
-            // Left Leaf
-            Left = new(a.Site),
+            // Middle Leaf
+            Left = new(e),
 
-            // Internal Node
-            // TODO: Wait what should the site be for this node??
-            Right = new(e)
-            {
-                // Middle Leaf
-                Left = new(e),
-
-                // Right Leaf
-                Right = new(a.Site)
-            }
+            // Right Leaf
+            Right = new(a.Site)
         };
-        a.ReplaceWith(subtreeRoot);
+
+        // 4. Create new half-edge records in the Voronoi diagram structure for the
+        //    edge separating V(pi) and V(pj), which will be traced out by the two new
+        //    breakpoints.
     }
 
     private void HandleCircleEvent(CircleEvent e)
