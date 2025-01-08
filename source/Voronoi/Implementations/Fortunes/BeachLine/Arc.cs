@@ -59,20 +59,38 @@ internal class Arc
         ClosingEvent = null;
     }
 
-    public void ReplaceWith(Arc a)
+    /// <summary>
+    /// Retrieves the right-most leaf of the left subtree.
+    /// </summary>
+    /// <returns>Right-most leaf of left subtree.</returns>
+    internal Arc GetInnerLeafLeft()
     {
-        if (Parent.Left == this)
-            Parent.Left = a;
-        else if (Parent.Right == this)
-            Parent.Right = a;
-        else
-            throw new InvalidOperationException();
+        if (Left == null) return null;
+        Arc leftLeaf;
+        for (leftLeaf = Left;
+             !leftLeaf.IsLeaf;
+             leftLeaf = leftLeaf.Right);
+        return leftLeaf;
     }
 
-    internal float GetBreakpointX(SiteEvent e, float directrixY)
+    /// <summary>
+    /// Retrieves the left-most leaf of the right subtree.
+    /// </summary>
+    /// <returns>Left-most leaf of right subtree.</returns>
+    internal Arc GetInnerLeafRight()
     {
-        SiteEvent p = Left?.Site,
-                  q = Right?.Site;
+        if (Right == null) return null;
+        Arc rightLeaf;
+        for (rightLeaf = Right;
+             !rightLeaf.IsLeaf;
+             rightLeaf = rightLeaf.Left);
+        return rightLeaf;
+    }
+
+    internal float GetBreakpointX(float directrixY)
+    {
+        SiteEvent p = GetInnerLeafLeft()?.Site,
+                  q = GetInnerLeafRight()?.Site;
 
         // If the points are at the same Y, the X intercept is in between them.
         float dY = p.Y - q.Y;

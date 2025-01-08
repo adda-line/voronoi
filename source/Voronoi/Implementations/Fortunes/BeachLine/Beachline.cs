@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-internal class Beachline
+﻿internal class Beachline
 {
     internal Arc Root;
 
     public Arc GetArcAbove(SiteEvent e)
     {
         Arc node = Root;
-        while (node != null && !node.IsLeaf)
+        while (!node.IsLeaf)
         {
-            float breakpointX = node.GetBreakpointX(e, e.Y);
-            if (e.X < breakpointX)
-                node = node.Left;
-            else
-                node = node.Right;
+            // Find X where child parabolae intersect using
+            // the specified directrix.
+            float breakpointX = node.GetBreakpointX(e.Y);
+            if (e.X < breakpointX)  node = node.Left;
+            else                    node = node.Right;
         }
         return node;
     }
