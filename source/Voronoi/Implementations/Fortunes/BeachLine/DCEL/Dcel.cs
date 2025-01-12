@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 internal class Dcel
 {
-    private List<Vertex> _vertices = new();
-    private List<HalfEdge> _edges = new();
-    private List<Face> _faces = new();
+    internal List<Vertex> _vertices = new();
+    internal List<HalfEdge> _edges = new();
+    internal List<Face> _faces = new();
 }

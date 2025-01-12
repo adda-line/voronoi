@@ -33,7 +33,10 @@ public class DefaultEventQueue : PriorityQueue<IEvent, IEvent>, IEventQueue
     public void Initialize(params Vector2[] sites) =>
         EnqueueRange(sites.Select(e =>
         {
-            IEvent siteEvent = new SiteEvent(e);
+            IEvent siteEvent = new SiteEvent(e)
+            {
+                Face = new()
+            };
             return (siteEvent, siteEvent);
         }));
 

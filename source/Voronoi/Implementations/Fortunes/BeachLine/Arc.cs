@@ -60,6 +60,42 @@ internal class Arc
     }
 
     /// <summary>
+    /// Gets the Y value of the parabola defined by this arc's focus - <see cref="Site"/>
+    /// and the provided directrix - <paramref name="directrixY"/>
+    /// </summary>
+    /// <remarks>
+    /// This code is derived directly from Wikipedia's article on parabolae circa Jan. 7, 2025:
+    /// https://en.wikipedia.org/wiki/Parabola#Axis_of_symmetry_parallel_to_the_y_axis
+    /// </remarks>
+    /// <param name="x">X value to plug into the focus-directrix relation.</param>
+    /// <param name="directrixY">The heigh of the directrix so that a parabola may be defined with <see cref="Site"/> as the focus.</param>
+    /// <returns>Y value for the parabola defined by this arc's focus (<see cref="Site"/>) and the provided directrix.</returns>
+    public float GetYAt(float x, float directrixY)
+    {
+        float _2f = (Site.Y - directrixY);
+        float _4f = 2 * _2f;
+        float _f = _2f / 2;
+        float _1Over2f = 1 / _2f;
+        float _1Over4f = 1 / _4f;
+
+        // Define vertex V it lie directly under Site and equidistant
+        // from both the Site and the directrix.
+        //     X = Site.X
+        //     Y = (Site.Y + directrixY)/2 <- shortcut is Site.Y - _f
+        float vx = Site.X;
+        float vy = Site.Y - _f;
+
+        // These will form the standard definition of a parabola
+        // i.e. y = ax^2 + bx + c
+        float a = _1Over4f;
+        float b = -(vx * _1Over2f);
+        float c = (vx * vx * _1Over4f) + vy;
+        return (a * x * x) +
+               (b * x) +
+               (c);
+    }
+
+    /// <summary>
     /// Retrieves the right-most leaf of the left subtree.
     /// </summary>
     /// <returns>Right-most leaf of left subtree.</returns>

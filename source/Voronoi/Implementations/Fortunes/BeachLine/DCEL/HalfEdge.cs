@@ -14,7 +14,7 @@
 
     /// <summary>
     /// Unique half-edge on the boundary of <see cref="IncidentFace"/>
-    /// whose destinatino is our origin.
+    /// whose destination is our origin and whose origin is our destination.
     /// </summary>
     public HalfEdge Prev { get; internal set; }
 

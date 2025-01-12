@@ -2,14 +2,14 @@
 
 internal class SiteEvent : IEvent
 {
-    public int X { get; private set; }
-    public int Y { get; private set; }
+    internal Vector2 Position;
+    internal Face Face;
 
-    public SiteEvent(Vector2 p) : this((int)p.X, (int)p.Y) { }
+    public int X => (int)Position.X;
+    public int Y => (int)Position.Y;
 
-    public SiteEvent(int x, int y)
+    public SiteEvent(Vector2 p)
     {
-        X = x;
-        Y = y;
+        Position = p;
     }
 }

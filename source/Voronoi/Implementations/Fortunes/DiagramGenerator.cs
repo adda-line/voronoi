@@ -1,6 +1,7 @@
 ﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 public class Diagram { }
 
@@ -44,6 +45,9 @@ internal class DiagramGenerator<TQ>
 
     private void HandleSiteEvent(SiteEvent e)
     {
+        // 0. Add this site's face to the list
+        _diagram._faces.Add(e.Face);
+
         // 1. If the beachline is empty, insert it at the root and quit.
         if (_beachline.Root == null)
         {
@@ -67,22 +71,43 @@ internal class DiagramGenerator<TQ>
         //    the two new internal nodes will store the breakpoints.
         //    We will be using a as the subtree root.
         //    TODO: Rebalance here
-        // Left Leaf
-        a.Left = new(a.Site);
+        Arc leftLeaf = new(a.Site),
+            middleLeaf = new(e),
+            rightLeaf = new(a.Site);
+        a.Left = leftLeaf;
 
         // New Internal Node
         a.Right = new()
         {
-            // Middle Leaf
-            Left = new(e),
-
-            // Right Leaf
-            Right = new(a.Site)
+            Left = middleLeaf,
+            Right = rightLeaf
         };
 
         // 4. Create new half-edge records in the Voronoi diagram structure for the
         //    edge separating V(pi) and V(pj), which will be traced out by the two new
         //    breakpoints.
+        Vertex breakpoint = new(e.X, a.GetYAt(e.X, e.Y));
+        _diagram._vertices.Add(breakpoint);
+
+        HalfEdge edgeLeft = new()
+        {
+            Origin = breakpoint,
+            IncidentFace = leftLeaf.Site.Face,
+        };
+        HalfEdge edgeRight = new()
+        {
+            Origin = breakpoint,
+            IncidentFace = rightLeaf.Site.Face,
+        };
+        edgeLeft.Twin = edgeRight;
+        edgeRight.Twin = edgeLeft;
+        _diagram._edges.Add(edgeLeft);
+        _diagram._edges.Add(edgeRight);
+
+        // 5. Check the triple of consecutive arcs where the new arc for pi is the left arc
+        //    to see if the breakpoints converge. If so, insert the circle event into Q and
+        //    add pointers between the node in T and the node in Q.Do the same for the
+        //    triple where the new arc is the right arc.
     }
 
     private void HandleCircleEvent(CircleEvent e)
