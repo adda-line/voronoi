@@ -1,7 +1,7 @@
 ﻿using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 public class Diagram { }
 
@@ -108,10 +108,55 @@ internal class DiagramGenerator<TQ>
         //    to see if the breakpoints converge. If so, insert the circle event into Q and
         //    add pointers between the node in T and the node in Q.Do the same for the
         //    triple where the new arc is the right arc.
+        // TODO: Real point values!
+        Vector2 p1 = Vector2.Zero, p2 = Vector2.Zero, p3 = Vector2.Zero;
+        if (WillBeCircleEvent(p1, p2, p3, out CircleEvent circleEvent))
+        {
+            _eventQueue.Enqueue(circleEvent);
+        }
     }
 
     private void HandleCircleEvent(CircleEvent e)
     {
+    }
+
+    // TODO: Probably need to feed the site events in so we can have a closing arc.
+    private static bool WillBeCircleEvent(Vector2 p1, Vector2 p2, Vector2 p3, out CircleEvent circleEvent)
+    {
+        circleEvent = null;
+
+        // First we need to see if the points are collinear.
+        // To do this we need to see if the area of the triangle they make
+        // is roughly 0.
+        Vector3 pointXs = new(p1.X, p2.X, p3.X);
+        Vector3 pointYs = new(p1.Y, p2.Y, p3.Y);
+        float triangleArea = new Basis(pointXs, pointYs, Vector3.One).Determinant();
+        if (MathF.Abs(triangleArea) < float.Epsilon)
+            return false;
+
+        // Now to calculate the circumcenter of these 3 points.
+        // The circumcenter is the point that is equidistant from all 3 - the location of my circle event.
+        // I stole the maths from wikipedia:
+        //     https://en.wikipedia.org/wiki/Circumcircle#Circumcircle_equations
+        Vector3 lengthsSqrd = new(p1.LengthSquared(), p2.LengthSquared(), p3.LengthSquared());
+
+        // next to find the circumcenter X-Y coords.
+        Vector2 circumcenter = new()
+        {
+            X = (0.5f / triangleArea) * new Basis(lengthsSqrd, pointYs, Vector3.One).Determinant(),
+            Y = (0.5f / triangleArea) * new Basis(pointXs, lengthsSqrd, Vector3.One).Determinant()
+        };
+
+        // Finally, add the radius to the Y since we will process the circle event when
+        // the sweep-line encounters the bottom of the circumcircle
+        float b = new Basis(pointXs, pointYs, lengthsSqrd).Determinant();
+        float circumradius = MathF.Sqrt((b / triangleArea) + circumcenter.LengthSquared());
+        circleEvent = new()
+        {
+            X = (int)circumcenter.X,
+            Y = (int)(circumcenter.Y + circumradius)
+        };
+        return true;
     }
 }
 
