@@ -1,6 +1,7 @@
 ﻿using Godot;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 public class Diagram { }
@@ -8,11 +9,11 @@ public class Diagram { }
 internal class DiagramGenerator<TQ>
     where TQ : IEventQueue, new()
 {
-    private HashSet<IEvent> _falseAlarms = new();
+    private readonly HashSet<IEvent> _falseAlarms = new();
+    private readonly Beachline _beachline = new();
 
     protected TQ _eventQueue;
 
-    private Beachline _beachline = new Beachline();
     private Dcel _diagram;
 
     public DiagramGenerator(IEnumerable<Vector2> sites)
@@ -74,13 +75,13 @@ internal class DiagramGenerator<TQ>
         Arc leftLeaf = new(a.Site),
             middleLeaf = new(e),
             rightLeaf = new(a.Site);
-        a.Left = leftLeaf;
+        a.LeftChild = leftLeaf;
 
         // New Internal Node
-        a.Right = new()
+        a.RightChild = new()
         {
-            Left = middleLeaf,
-            Right = rightLeaf
+            LeftChild = middleLeaf,
+            RightChild = rightLeaf
         };
 
         // 4. Create new half-edge records in the Voronoi diagram structure for the
@@ -104,13 +105,18 @@ internal class DiagramGenerator<TQ>
         _diagram._edges.Add(edgeLeft);
         _diagram._edges.Add(edgeRight);
 
-        // 5. Check the triple of consecutive arcs where the new arc for pi is the left arc
-        //    to see if the breakpoints converge. If so, insert the circle event into Q and
-        //    add pointers between the node in T and the node in Q.Do the same for the
-        //    triple where the new arc is the right arc.
-        // TODO: Real point values!
-        Vector2 p1 = Vector2.Zero, p2 = Vector2.Zero, p3 = Vector2.Zero;
-        if (WillBeCircleEvent(p1, p2, p3, out CircleEvent circleEvent))
+        // 5a. Check the triple of consecutive arcs where the new arc (middleLeaf) for e is the
+        //     left arc to see if the breakpoints converge. If so, insert the circle event into Q
+        //     and add pointers between the node in T and the node in Q.
+        Arc nextArcToTheRight = rightLeaf.GetArcToRight();
+        if (WillBeCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, out CircleEvent circleEvent))
+        {
+            _eventQueue.Enqueue(circleEvent);
+        }
+
+        // 5b. Do the same for the triple where the new arc (middleLeaf) is the right arc.
+        Arc nextArcToTheLeft = leftLeaf.GetArcToRight();
+        if (WillBeCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, out circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
         }
@@ -120,25 +126,45 @@ internal class DiagramGenerator<TQ>
     {
     }
 
-    // TODO: Probably need to feed the site events in so we can have a closing arc.
-    private static bool WillBeCircleEvent(Vector2 p1, Vector2 p2, Vector2 p3, out CircleEvent circleEvent)
+    /// <summary>
+    /// Detects if the middle parabola, <paramref name="p2"/> will be closed out
+    /// by <paramref name="p1"/> and <paramref name="p3"/>. Creates a circle event
+    /// with the appropriate closure point if so.
+    /// </summary>
+    /// <param name="p1">Left parabola.</param>
+    /// <param name="p2">Middle parabola.</param>
+    /// <param name="p3">Right parabola.</param>
+    /// <param name="circleEvent">Event that represents the closure of <paramref name="p2"/>.</param>
+    /// <returns>True if a closure event is detected, false otherwise.</returns>
+    /// TODO: Add check that middle arc site position is highest since that _probably_ precludes a circle event.
+    private static bool WillBeCircleEvent(Arc p1, Arc p2, Arc p3, out CircleEvent circleEvent)
     {
+        // Assert that the sites are actually left to right.
+        Debug.Assert(p1.Site.X < p2.Site.X);
+        Debug.Assert(p2.Site.X < p3.Site.X);
+
         circleEvent = null;
 
         // First we need to see if the points are collinear.
         // To do this we need to see if the area of the triangle they make
         // is roughly 0.
-        Vector3 pointXs = new(p1.X, p2.X, p3.X);
-        Vector3 pointYs = new(p1.Y, p2.Y, p3.Y);
+        // TODO: Figure out a good epsilon.
+        Vector3 pointXs = new(p1.Site.X, p2.Site.X, p3.Site.X);
+        Vector3 pointYs = new(p1.Site.Y, p2.Site.Y, p3.Site.Y);
         float triangleArea = new Basis(pointXs, pointYs, Vector3.One).Determinant();
         if (MathF.Abs(triangleArea) < float.Epsilon)
             return false;
 
         // Now to calculate the circumcenter of these 3 points.
-        // The circumcenter is the point that is equidistant from all 3 - the location of my circle event.
+        // The circumcenter is the point that is equidistant from all 3 sites.
+        // The bottom of the circumcenter will be the circle event.
         // I stole the maths from wikipedia:
         //     https://en.wikipedia.org/wiki/Circumcircle#Circumcircle_equations
-        Vector3 lengthsSqrd = new(p1.LengthSquared(), p2.LengthSquared(), p3.LengthSquared());
+        Vector3 lengthsSqrd = new(
+            p1.Site.Position.LengthSquared(),
+            p2.Site.Position.LengthSquared(),
+            p3.Site.Position.LengthSquared()
+        );
 
         // next to find the circumcenter X-Y coords.
         Vector2 circumcenter = new()
@@ -154,7 +180,8 @@ internal class DiagramGenerator<TQ>
         circleEvent = new()
         {
             X = (int)circumcenter.X,
-            Y = (int)(circumcenter.Y + circumradius)
+            Y = (int)(circumcenter.Y + circumradius),
+            DisappearingArc = p2
         };
         return true;
     }

@@ -10,7 +10,7 @@ internal class Arc
     // When the arc has been closed it becomes an internal node
     // with the following members populated.
     // TODO: Formalize this with types
-    internal Arc Left
+    internal Arc LeftChild
     {
         get => _left;
         set
@@ -20,7 +20,7 @@ internal class Arc
         }
     }
 
-    internal Arc Right
+    internal Arc RightChild
     {
         get => _right;
         set
@@ -44,7 +44,7 @@ internal class Arc
     internal SiteEvent Site;
     #endregion
 
-    internal bool IsLeaf => Left == null && Right == null;
+    internal bool IsLeaf => LeftChild == null && RightChild == null;
 
     public Arc() : this(null)
     { }
@@ -52,8 +52,8 @@ internal class Arc
     public Arc(SiteEvent site)
     {
         Parent = null;
-        Left = null;
-        Right = null;
+        LeftChild = null;
+        RightChild = null;
 
         Site = site;
         ClosingEvent = null;
@@ -96,16 +96,62 @@ internal class Arc
     }
 
     /// <summary>
+    /// Determines the arc directly to the left of this one on the beachline.
+    /// </summary>
+    /// <returns>The arc directly to the left of this on the beachline.</returns>
+    /// TODO: Add handling for if this is the left-most arc.
+    internal Arc GetArcToLeft()
+    {
+        // First we need to get the first ancestor such that _this_ is
+        // in the right subtree - only then will there be a left sub-tree
+        // to traverse.
+        Arc ancestor = this;
+        while (ancestor == ancestor.Parent.LeftChild)
+        {
+            ancestor = ancestor.Parent;
+        }
+        ancestor = ancestor.Parent;
+
+        // Next we need to get the right-most leaf of the ancestor's
+        // left-subtree his will be the arc directly to the left of
+        // _this_ arc.
+        return ancestor.GetInnerLeafLeft();
+    }
+
+    /// <summary>
+    /// Determines the arc directly to the right of this one on the beachline.
+    /// </summary>
+    /// <returns>The arc directly to the right of this on the beachline.</returns>
+    /// TODO: Add handling for if this is the right-most arc.
+    internal Arc GetArcToRight()
+    {
+        // First we need to get the first ancestor such that _this_ is
+        // in the left subtree - only then will there be a right sub-tree
+        // to traverse.
+        Arc ancestor = this;
+        while (ancestor == ancestor.Parent.LeftChild)
+        {
+            ancestor = ancestor.Parent;
+        }
+        ancestor = ancestor.Parent;
+
+        // Next we need to get the left-most leaf of the ancestor's
+        // right-subtree his will be the arc directly to the left of
+        // _this_ arc.
+        return ancestor.GetInnerLeafRight();
+    }
+
+    /// <summary>
     /// Retrieves the right-most leaf of the left subtree.
     /// </summary>
     /// <returns>Right-most leaf of left subtree.</returns>
     internal Arc GetInnerLeafLeft()
     {
-        if (Left == null) return null;
+        if (LeftChild == null) return null;
         Arc leftLeaf;
-        for (leftLeaf = Left;
+        for (leftLeaf = LeftChild;
              !leftLeaf.IsLeaf;
-             leftLeaf = leftLeaf.Right);
+             leftLeaf = leftLeaf.RightChild);
         return leftLeaf;
     }
 
@@ -115,11 +161,11 @@ internal class Arc
     /// <returns>Left-most leaf of right subtree.</returns>
     internal Arc GetInnerLeafRight()
     {
-        if (Right == null) return null;
+        if (RightChild == null) return null;
         Arc rightLeaf;
-        for (rightLeaf = Right;
+        for (rightLeaf = RightChild;
              !rightLeaf.IsLeaf;
-             rightLeaf = rightLeaf.Left);
+             rightLeaf = rightLeaf.LeftChild);
         return rightLeaf;
     }
 

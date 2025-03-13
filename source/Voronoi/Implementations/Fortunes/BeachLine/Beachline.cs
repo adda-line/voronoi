@@ -10,8 +10,8 @@
             // Find X where child parabolae intersect using
             // the specified directrix.
             float breakpointX = node.GetBreakpointX(e.Y);
-            if (e.X < breakpointX)  node = node.Left;
-            else                    node = node.Right;
+            if (e.X < breakpointX)  node = node.LeftChild;
+            else                    node = node.RightChild;
         }
         return node;
     }
