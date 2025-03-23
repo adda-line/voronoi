@@ -100,22 +100,22 @@ internal class Arc
     /// </summary>
     /// <returns>The arc directly to the left of this on the beachline.</returns>
     /// TODO: Add handling for if this is the left-most arc.
-    internal Arc GetArcToLeft()
+    internal Arc GetArcToLeft(out Arc commonAncestor)
     {
         // First we need to get the first ancestor such that _this_ is
         // in the right subtree - only then will there be a left sub-tree
         // to traverse.
-        Arc ancestor = this;
-        while (ancestor == ancestor.Parent.LeftChild)
+        commonAncestor = this;
+        while (commonAncestor == commonAncestor.Parent.LeftChild)
         {
-            ancestor = ancestor.Parent;
+            commonAncestor = commonAncestor.Parent;
         }
-        ancestor = ancestor.Parent;
+        commonAncestor = commonAncestor.Parent;
 
         // Next we need to get the right-most leaf of the ancestor's
         // left-subtree his will be the arc directly to the left of
         // _this_ arc.
-        return ancestor.GetInnerLeafLeft();
+        return commonAncestor.GetInnerLeafLeft();
     }
 
     /// <summary>
@@ -123,22 +123,22 @@ internal class Arc
     /// </summary>
     /// <returns>The arc directly to the right of this on the beachline.</returns>
     /// TODO: Add handling for if this is the right-most arc.
-    internal Arc GetArcToRight()
+    internal Arc GetArcToRight(out Arc commonAncestor)
     {
         // First we need to get the first ancestor such that _this_ is
         // in the left subtree - only then will there be a right sub-tree
         // to traverse.
-        Arc ancestor = this;
-        while (ancestor == ancestor.Parent.LeftChild)
+        commonAncestor = this;
+        while (commonAncestor == commonAncestor.Parent.LeftChild)
         {
-            ancestor = ancestor.Parent;
+            commonAncestor = commonAncestor.Parent;
         }
-        ancestor = ancestor.Parent;
+        commonAncestor = commonAncestor.Parent;
 
         // Next we need to get the left-most leaf of the ancestor's
         // right-subtree his will be the arc directly to the left of
         // _this_ arc.
-        return ancestor.GetInnerLeafRight();
+        return commonAncestor.GetInnerLeafRight();
     }
 
     /// <summary>

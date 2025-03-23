@@ -108,14 +108,14 @@ internal class DiagramGenerator<TQ>
         // 5a. Check the triple of consecutive arcs where the new arc (middleLeaf) for e is the
         //     left arc to see if the breakpoints converge. If so, insert the circle event into Q
         //     and add pointers between the node in T and the node in Q.
-        Arc nextArcToTheRight = rightLeaf.GetArcToRight();
+        Arc nextArcToTheRight = rightLeaf.GetArcToRight(out _);
         if (WillBeCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, out CircleEvent circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
         }
 
         // 5b. Do the same for the triple where the new arc (middleLeaf) is the right arc.
-        Arc nextArcToTheLeft = leftLeaf.GetArcToRight();
+        Arc nextArcToTheLeft = leftLeaf.GetArcToLeft(out _);
         if (WillBeCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, out circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
@@ -124,6 +124,24 @@ internal class DiagramGenerator<TQ>
 
     private void HandleCircleEvent(CircleEvent e)
     {
+        // 1. Delete the leaf γ that represents the disappearing arc α from T. Update
+        //    the tuples representing the breakpoints at the internal nodes. Perform
+        //    rebalancing operations on T if necessary. Delete all circle events involving
+        //    α from Q; these can be found using the pointers from the predecessor and
+        //    the successor of γ in T. (The circle event where α is the middle arc is
+        //    currently being handled, and has already been deleted from Q.)
+
+        // 2. Add the center of the circle causing the event as a vertex record to the
+        //    doubly-connected edge list D storing the Voronoi diagram under construc-
+        //    tion. Create two half-edge records corresponding to the new breakpoint
+        //    of the beach line. Set the pointers between them appropriately. Attach the
+        //    three new records to the half-edge records that end at the vertex.
+
+        // 3. Check the new triple of consecutive arcs that has the former left neighbor
+        //    of α as its middle arc to see if the two breakpoints of the triple converge.
+        //    If so, insert the corresponding circle event into Q. and set pointers between
+        //    the new circle event in Q and the corresponding leaf of T. Do the same for
+        //    the triple where the former right neighbor is the middle arc.
     }
 
     /// <summary>
@@ -166,15 +184,15 @@ internal class DiagramGenerator<TQ>
             p3.Site.Position.LengthSquared()
         );
 
-        // next to find the circumcenter X-Y coords.
+        // Next to find the circumcenter X-Y coords.
         Vector2 circumcenter = new()
         {
             X = (0.5f / triangleArea) * new Basis(lengthsSqrd, pointYs, Vector3.One).Determinant(),
             Y = (0.5f / triangleArea) * new Basis(pointXs, lengthsSqrd, Vector3.One).Determinant()
         };
 
-        // Finally, add the radius to the Y since we will process the circle event when
-        // the sweep-line encounters the bottom of the circumcircle
+        // Finally, add the circumradius to the Y since we will process the circle event
+        // when the sweep-line encounters the bottom of the circumcircle
         float b = new Basis(pointXs, pointYs, lengthsSqrd).Determinant();
         float circumradius = MathF.Sqrt((b / triangleArea) + circumcenter.LengthSquared());
         circleEvent = new()
