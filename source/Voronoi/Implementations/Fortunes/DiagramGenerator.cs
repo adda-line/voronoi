@@ -113,14 +113,16 @@ internal class DiagramGenerator<TQ>
         //     left arc to see if the breakpoints converge. If so, insert the circle event into Q
         //     and add pointers between the node in T and the node in Q.
         Arc nextArcToTheRight = rightLeaf.GetArcToRight(out _);
-        if (WillBeCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, out CircleEvent circleEvent))
+        if (nextArcToTheRight != null &&
+            WillBeCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, out CircleEvent circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
         }
 
         // 5b. Do the same for the triple where the new arc (middleLeaf) is the right arc.
         Arc nextArcToTheLeft = leftLeaf.GetArcToLeft(out _);
-        if (WillBeCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, out circleEvent))
+        if (nextArcToTheLeft != null &&
+            WillBeCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, out circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
         }
