@@ -136,12 +136,34 @@ internal class DiagramGenerator<TQ>
         //    α from Q; these can be found using the pointers from the predecessor and
         //    the successor of γ in T. (The circle event where α is the middle arc is
         //    currently being handled, and has already been deleted from Q.)
+        Arc p1 = e.DisappearingArc;
+
+        Arc p0 = p1.GetArcToLeft(out Arc xl);
+        Arc p2 = p1.GetArcToRight(out Arc xr);
+
+        if(p0 == p2) Debug.Print("Single parabola predicted to close another.");
+
+        if(p0.ClosingEvent != null)
+        {
+            _falseAlarms.Add(p0.ClosingEvent);
+            p0.ClosingEvent = null;
+        }
+        if(p2.ClosingEvent != null)
+        {
+            _falseAlarms.Add(p2.ClosingEvent);
+            p2.ClosingEvent = null;
+        }
 
         // 2. Add the center of the circle causing the event as a vertex record to the
         //    doubly-connected edge list D storing the Voronoi diagram under construc-
         //    tion. Create two half-edge records corresponding to the new breakpoint
         //    of the beach line. Set the pointers between them appropriately. Attach the
         //    three new records to the half-edge records that end at the vertex.
+        Vertex p = new(e.X, (int)p1.GetYAt(e.X, e.Y));
+        _diagram._vertices.Add(p);
+
+        xl._edge.Twin.Origin = p;
+        xr._edge.Twin.Origin = p;
 
         // 3. Check the new triple of consecutive arcs that has the former left neighbor
         //    of α as its middle arc to see if the two breakpoints of the triple converge.
