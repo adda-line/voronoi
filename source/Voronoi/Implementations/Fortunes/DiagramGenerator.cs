@@ -93,17 +93,21 @@ internal class DiagramGenerator<TQ>
         HalfEdge edgeLeft = new()
         {
             Origin = breakpoint,
-            IncidentFace = leftLeaf.Site.Face,
+            IncidentFace = e.Face,
         };
+        a._edge = edgeLeft;
+        _diagram._edges.Add(edgeLeft);
+
         HalfEdge edgeRight = new()
         {
             Origin = breakpoint,
             IncidentFace = rightLeaf.Site.Face,
         };
+        a.RightChild._edge = edgeRight;
+        _diagram._edges.Add(edgeRight);
+
         edgeLeft.Twin = edgeRight;
         edgeRight.Twin = edgeLeft;
-        _diagram._edges.Add(edgeLeft);
-        _diagram._edges.Add(edgeRight);
 
         // 5a. Check the triple of consecutive arcs where the new arc (middleLeaf) for e is the
         //     left arc to see if the breakpoints converge. If so, insert the circle event into Q

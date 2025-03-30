@@ -5,6 +5,8 @@ internal class Arc
     internal Arc Parent;
 
     #region Internal Node Members - Breakpoint
+    internal HalfEdge _edge;
+
     private Arc _left, _right;
 
     // When the arc has been closed it becomes an internal node
