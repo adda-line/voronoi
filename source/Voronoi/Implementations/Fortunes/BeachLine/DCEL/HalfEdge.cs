@@ -28,4 +28,9 @@
     /// The face this edge bounds; lies to the left of this edge.
     /// </summary>
     public Face IncidentFace { get; set; }
+
+    /// <summary>
+    /// The destination is stored as the twin's origin.
+    /// </summary>
+    public Vertex Destination { get => Twin.Origin; set => Twin.Origin = value; }
 }

@@ -130,46 +130,56 @@ internal class DiagramGenerator<TQ>
 
     private void HandleCircleEvent(CircleEvent e)
     {
-        // 1. Delete the leaf γ that represents the disappearing arc α from T. Update
-        //    the tuples representing the breakpoints at the internal nodes. Perform
-        //    rebalancing operations on T if necessary. Delete all circle events involving
-        //    α from Q; these can be found using the pointers from the predecessor and
-        //    the successor of γ in T. (The circle event where α is the middle arc is
-        //    currently being handled, and has already been deleted from Q.)
-        Arc p1 = e.DisappearingArc;
+        Arc middleArc = e.DisappearingArc;
 
-        Arc p0 = p1.GetArcToLeft(out Arc xl);
-        Arc p2 = p1.GetArcToRight(out Arc xr);
+        // TODO: This is already computed at time of circle event generation
+        //       maybe store as additional info? Makes rebalance awkward.
+        Arc leftArc = middleArc.GetArcToLeft(out Arc leftCommonAncestor);
+        Arc rightArc = middleArc.GetArcToRight(out Arc rightCommonAncestor);
 
-        if(p0 == p2) Debug.Print("Single parabola predicted to close another.");
+        // TODO: This is an error case, it should be treated as such
+        if(leftArc == rightArc) Debug.Print("Single parabola predicted to close another.");
 
-        if(p0.ClosingEvent != null)
-        {
-            _falseAlarms.Add(p0.ClosingEvent);
-            p0.ClosingEvent = null;
-        }
-        if(p2.ClosingEvent != null)
-        {
-            _falseAlarms.Add(p2.ClosingEvent);
-            p2.ClosingEvent = null;
-        }
+        // 1a. TODO: Delete the disappearing arc from the beachline
 
-        // 2. Add the center of the circle causing the event as a vertex record to the
-        //    doubly-connected edge list D storing the Voronoi diagram under construc-
-        //    tion. Create two half-edge records corresponding to the new breakpoint
-        //    of the beach line. Set the pointers between them appropriately. Attach the
-        //    three new records to the half-edge records that end at the vertex.
-        Vertex p = new(e.X, (int)p1.GetYAt(e.X, e.Y));
-        _diagram._vertices.Add(p);
+        // 1b. Mark circle events as "false alarms" on sibling nodes because one of the
+        //     nodes in the event (e.DisappearingArc) is no longer a valid candidate for
+        //     closing other arcs.
+        if (leftArc.ClosingEvent != null)
+            _falseAlarms.Add(leftArc.ClosingEvent);
 
-        xl._edge.Twin.Origin = p;
-        xr._edge.Twin.Origin = p;
+        if (rightArc.ClosingEvent != null)
+            _falseAlarms.Add(rightArc.ClosingEvent);
+
+        leftArc.ClosingEvent = rightArc.ClosingEvent = null;
+
+        // 2a. Add the center of the circle causing the event as a vertex record to the
+        //     doubly-connected edge list diagram under construction.
+        Vertex circumcenter = new(e.X, (int)middleArc.GetYAt(e.X, e.Y));
+        _diagram._vertices.Add(circumcenter);
+
+        // 2b. Update the tuples representing the breakpoints at the internal nodes.
+        leftCommonAncestor._edge.Destination  =
+        rightCommonAncestor._edge.Destination = circumcenter;
 
         // 3. Check the new triple of consecutive arcs that has the former left neighbor
         //    of α as its middle arc to see if the two breakpoints of the triple converge.
         //    If so, insert the corresponding circle event into Q. and set pointers between
         //    the new circle event in Q and the corresponding leaf of T. Do the same for
         //    the triple where the former right neighbor is the middle arc.
+        Arc nextLeftArc = leftArc.GetArcToLeft(out _);
+        if (nextLeftArc != null &&
+            WillBeCircleEvent(nextLeftArc, leftArc, rightArc, out CircleEvent circleEvent))
+        {
+            _eventQueue.Enqueue(circleEvent);
+        }
+
+        Arc nextRightArc = rightArc.GetArcToRight(out _);
+        if (nextRightArc != null &&
+            WillBeCircleEvent(leftArc, rightArc, nextRightArc, out circleEvent))
+        {
+            _eventQueue.Enqueue(circleEvent);
+        }
     }
 
     /// <summary>
