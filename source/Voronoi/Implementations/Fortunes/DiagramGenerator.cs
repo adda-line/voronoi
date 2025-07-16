@@ -142,9 +142,9 @@ internal class DiagramGenerator<TQ>
 
         // 1a. TODO: Delete the disappearing arc from the beachline
 
-        // 1b. Mark circle events as "false alarms" on sibling nodes because one of the
-        //     nodes in the event (e.DisappearingArc) is no longer a valid candidate for
-        //     closing other arcs.
+        // 1. Mark circle events as "false alarms" on sibling nodes because one of the
+        //    nodes in the event (e.DisappearingArc) is no longer a valid candidate for
+        //    closing other arcs.
         if (leftArc.ClosingEvent != null)
             _falseAlarms.Add(leftArc.ClosingEvent);
 
@@ -162,7 +162,48 @@ internal class DiagramGenerator<TQ>
         leftCommonAncestor._edge.Destination  =
         rightCommonAncestor._edge.Destination = circumcenter;
 
-        // 3. Check the new triple of consecutive arcs that has the former left neighbor
+        // TODO: Understand
+        // Let the ancestor encountered first in the plane (nearest root) represent the
+        // edge that starts at the circumcenter.
+        Arc earliestAncestor = null;
+        for (Arc currentAncestor = middleArc.Parent;
+             currentAncestor != _beachline.Root;
+             currentAncestor = currentAncestor.Parent)
+        {
+            if (currentAncestor == leftCommonAncestor)
+                earliestAncestor = leftCommonAncestor;
+            if (currentAncestor == rightCommonAncestor)
+                earliestAncestor = rightCommonAncestor;
+        }
+
+        // TODO: Proper error handling.
+        Debug.Assert(earliestAncestor != null);
+
+        // TODO: Do I need to delete the existing edge from _diagram?
+        earliestAncestor._edge = new()
+        {
+            Origin = circumcenter,
+            IncidentFace = leftArc.Site.Face,
+        };
+        _diagram._edges.Add(earliestAncestor._edge);
+
+        // 3. Remove the middle arc. We do this by replacing the arc and its parent
+        //    with the middle arc's sibling.
+        //    TODO: Rebalance?
+        Arc middleArcSibling =
+            (middleArc.Parent.LeftChild == middleArc)
+                ? middleArc.Parent.RightChild
+                : middleArc.Parent.LeftChild;
+        if (middleArc.Parent.Parent.LeftChild == middleArc.Parent)
+        {
+            middleArc.Parent.Parent.LeftChild = middleArcSibling;
+        }
+        else
+        {
+            middleArc.Parent.Parent.RightChild = middleArcSibling;
+        }
+
+        // 4. Check the new triple of consecutive arcs that has the former left neighbor
         //    of α as its middle arc to see if the two breakpoints of the triple converge.
         //    If so, insert the corresponding circle event into Q. and set pointers between
         //    the new circle event in Q and the corresponding leaf of T. Do the same for
