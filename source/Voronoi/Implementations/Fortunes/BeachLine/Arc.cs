@@ -18,7 +18,8 @@ internal class Arc
         set
         {
             _left = value;
-            _left.Parent = this;
+            if (_left != null)
+                _left.Parent = this;
         }
     }
 
@@ -28,7 +29,8 @@ internal class Arc
         set
         {
             _right = value;
-            _right.Parent = this;
+            if (_right != null)
+                _right.Parent = this;
         }
     }
     #endregion

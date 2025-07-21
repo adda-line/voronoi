@@ -14,7 +14,7 @@ internal class DiagramGenerator<TQ>
 
     protected TQ _eventQueue;
 
-    private Dcel _diagram;
+    private Dcel _diagram = new Dcel();
 
     public DiagramGenerator(IEnumerable<Vector2> sites)
     {
@@ -40,6 +40,8 @@ internal class DiagramGenerator<TQ>
                     break;
             }
         }
+
+        AddBoundingBox();
 
         return new Diagram();
     }
@@ -220,6 +222,19 @@ internal class DiagramGenerator<TQ>
             WillBeCircleEvent(leftArc, rightArc, nextRightArc, out circleEvent))
         {
             _eventQueue.Enqueue(circleEvent);
+        }
+    }
+
+    private void AddBoundingBox()
+    {
+        Stack<Arc> edgesToProcess = new();
+        edgesToProcess.Push(_beachline.Root);
+
+        while (edgesToProcess.Count > 0)
+        {
+            Arc arc = edgesToProcess.Pop();
+            if (arc.IsLeaf)
+                continue;
         }
     }
 

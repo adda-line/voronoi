@@ -3,13 +3,25 @@ using Godot;
 public class OrderingTests
 {
     [Fact]
+    public void Test()
+    {
+        List<Vector2> sites = new()
+        {
+            GetEvent(1, 1),
+            GetEvent(2, 2)
+        };
+        DiagramGenerator generator = new(sites);
+        _ = generator.Generate();
+    }
+
+    [Fact]
     public void PointsSortedByY()
     {
         // Arrange
         DefaultEventQueue q = new();
-        var first =  GetEvent(0, 1);
+        var first = GetEvent(0, 1);
         var second = GetEvent(0, 2);
-        var third =  GetEvent(0, 3);
+        var third = GetEvent(0, 3);
 
         // Act
         q.Initialize(second, first, third);
