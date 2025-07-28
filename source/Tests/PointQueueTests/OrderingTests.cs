@@ -5,13 +5,30 @@ public class OrderingTests
     [Fact]
     public void Test()
     {
+        // Arrange
         List<Vector2> sites = new()
         {
             GetEvent(1, 1),
             GetEvent(2, 2)
         };
-        DiagramGenerator generator = new(sites);
-        _ = generator.Generate();
+
+        // Act
+        DiagramGenerator generator = new(sites, 3, 3);
+        Dcel diagram = generator.Generate();
+
+        // Assert
+        // Vertices in each corner to separate the sites.
+        Assert.Equal(2, diagram.Vertices.Count);
+        Assert.Single(diagram.Vertices, v => v.X == 0 && v.Y == 3);
+        Assert.Single(diagram.Vertices, v => v.X == 3 && v.Y == 0);
+
+        // Two-half edges to form the boundary between the site cells.
+        Assert.Equal(2, diagram.Edges.Count);
+        Assert.Single(diagram.Edges, e => e.Origin.X == 0 && e.Origin.Y == 3 && e.Destination.X == 3 && e.Destination.Y == 0);
+        Assert.Single(diagram.Edges, e => e.Origin.X == 3 && e.Origin.Y == 0 && e.Destination.X == 0 && e.Destination.Y == 3);
+
+        // Two faces, one for each cell.
+        Assert.Equal(2, diagram.Faces.Count);
     }
 
     [Fact]
