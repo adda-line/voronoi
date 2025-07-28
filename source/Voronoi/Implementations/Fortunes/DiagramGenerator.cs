@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-public class Diagram { }
-
 internal class DiagramGenerator<TQ>
     where TQ : IEventQueue, new()
 {
+    // FUTURE: Arbitrary bounding shape?
+    private readonly float _boundingBoxWidth, _boundingBoxHeight;
+
     private readonly HashSet<IEvent> _falseAlarms = new();
     private readonly Beachline _beachline = new();
 
@@ -16,13 +17,16 @@ internal class DiagramGenerator<TQ>
 
     private Dcel _diagram = new Dcel();
 
-    public DiagramGenerator(IEnumerable<Vector2> sites)
+    public DiagramGenerator(IEnumerable<Vector2> sites, float boundingBoxWidth, float boundingBoxHeight)
     {
+        _boundingBoxWidth = boundingBoxWidth;
+        _boundingBoxHeight = boundingBoxHeight;
+
         _eventQueue = new();
         _eventQueue.Initialize(sites.ToArray());
     }
 
-    public Diagram Generate()
+    public Dcel Generate()
     {
         while (_eventQueue.Count > 0)
         {
@@ -43,13 +47,13 @@ internal class DiagramGenerator<TQ>
 
         AddBoundingBox();
 
-        return new Diagram();
+        return _diagram;
     }
 
     private void HandleSiteEvent(SiteEvent e)
     {
         // 0. Add this site's face to the list
-        _diagram._faces.Add(e.Face);
+        _diagram.Faces.Add(e.Face);
 
         // 1. If the beachline is empty, insert it at the root and quit.
         if (_beachline.Root == null)
@@ -90,7 +94,7 @@ internal class DiagramGenerator<TQ>
         //    edge separating V(pi) and V(pj), which will be traced out by the two new
         //    breakpoints.
         Vertex breakpoint = new(e.X, a.GetYAt(e.X, e.Y));
-        _diagram._vertices.Add(breakpoint);
+        _diagram.Vertices.Add(breakpoint);
 
         HalfEdge edgeLeft = new()
         {
@@ -98,7 +102,7 @@ internal class DiagramGenerator<TQ>
             IncidentFace = e.Face,
         };
         a._edge = edgeLeft;
-        _diagram._edges.Add(edgeLeft);
+        _diagram.Edges.Add(edgeLeft);
 
         HalfEdge edgeRight = new()
         {
@@ -106,7 +110,7 @@ internal class DiagramGenerator<TQ>
             IncidentFace = rightLeaf.Site.Face,
         };
         a.RightChild._edge = edgeRight;
-        _diagram._edges.Add(edgeRight);
+        _diagram.Edges.Add(edgeRight);
 
         edgeLeft.Twin = edgeRight;
         edgeRight.Twin = edgeLeft;
@@ -157,8 +161,8 @@ internal class DiagramGenerator<TQ>
 
         // 2a. Add the center of the circle causing the event as a vertex record to the
         //     doubly-connected edge list diagram under construction.
-        Vertex circumcenter = new(e.X, (int)middleArc.GetYAt(e.X, e.Y));
-        _diagram._vertices.Add(circumcenter);
+        Vertex circumcenter = new(e.X, middleArc.GetYAt(e.X, e.Y));
+        _diagram.Vertices.Add(circumcenter);
 
         // 2b. Update the tuples representing the breakpoints at the internal nodes.
         leftCommonAncestor._edge.Destination  =
@@ -187,7 +191,7 @@ internal class DiagramGenerator<TQ>
             Origin = circumcenter,
             IncidentFace = leftArc.Site.Face,
         };
-        _diagram._edges.Add(earliestAncestor._edge);
+        _diagram.Edges.Add(earliestAncestor._edge);
 
         // 3. Remove the middle arc. We do this by replacing the arc and its parent
         //    with the middle arc's sibling.
@@ -301,5 +305,5 @@ internal class DiagramGenerator<TQ>
 
 internal class DiagramGenerator : DiagramGenerator<DefaultEventQueue>
 {
-    public DiagramGenerator(IEnumerable<Vector2> sites) : base(sites) { }
+    public DiagramGenerator(IEnumerable<Vector2> sites, float boundingBoxWidth, float boundingBoxHeight) : base(sites, boundingBoxWidth, boundingBoxHeight) { }
 }
