@@ -109,7 +109,7 @@ internal class Arc
         // in the right subtree - only then will there be a left sub-tree
         // to traverse.
         commonAncestor = this;
-        while (commonAncestor == commonAncestor?.Parent.LeftChild)
+        while (commonAncestor == commonAncestor?.Parent?.LeftChild)
         {
             commonAncestor = commonAncestor.Parent;
         }
@@ -135,7 +135,7 @@ internal class Arc
         // in the left subtree - only then will there be a right sub-tree
         // to traverse.
         commonAncestor = this;
-        while (commonAncestor == commonAncestor.Parent?.LeftChild)
+        while (commonAncestor == commonAncestor?.Parent?.LeftChild)
         {
             commonAncestor = commonAncestor.Parent;
         }

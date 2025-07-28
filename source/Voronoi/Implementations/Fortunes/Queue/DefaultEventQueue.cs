@@ -14,8 +14,8 @@ public class DefaultEventQueue : PriorityQueue<IEvent, IEvent>, IEventQueue
         public int Compare(IEvent p, IEvent q)
         {
             // Sort by Y first
-            if (p.Y < q.Y) return -1;
-            if (p.Y > q.Y) return 1;
+            if (p.Y > q.Y) return -1;
+            if (p.Y < q.Y) return 1;
 
             // Then by X
             if (p.X < q.X) return -1;

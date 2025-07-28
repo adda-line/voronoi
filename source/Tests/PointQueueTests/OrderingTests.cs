@@ -19,9 +19,9 @@ public class OrderingTests
     {
         // Arrange
         DefaultEventQueue q = new();
-        var first = GetEvent(0, 1);
+        var first = GetEvent(0, 3);
         var second = GetEvent(0, 2);
-        var third = GetEvent(0, 3);
+        var third = GetEvent(0, 1);
 
         // Act
         q.Initialize(second, first, third);
@@ -29,17 +29,17 @@ public class OrderingTests
         // Assert
         Assert.Equal(3, q.Count);
 
-        var lowestPriority = q.Dequeue();
-        Assert.Equal(first.X, lowestPriority.X);
-        Assert.Equal(first.Y, lowestPriority.Y);
+        var top = q.Dequeue();
+        Assert.Equal(first.X, top.X);
+        Assert.Equal(first.Y, top.Y);
 
-        lowestPriority = q.Dequeue();
-        Assert.Equal(second.X, lowestPriority.X);
-        Assert.Equal(second.Y, lowestPriority.Y);
+        top = q.Dequeue();
+        Assert.Equal(second.X, top.X);
+        Assert.Equal(second.Y, top.Y);
 
-        lowestPriority = q.Dequeue();
-        Assert.Equal(third.X, lowestPriority.X);
-        Assert.Equal(third.Y, lowestPriority.Y);
+        top = q.Dequeue();
+        Assert.Equal(third.X, top.X);
+        Assert.Equal(third.Y, top.Y);
     }
 
     [Fact]
@@ -56,17 +56,17 @@ public class OrderingTests
 
         // Assert
         Assert.Equal(3, q.Count);
-        var lowestPriority = q.Dequeue();
-        Assert.Equal(first.X, lowestPriority.X);
-        Assert.Equal(first.Y, lowestPriority.Y);
+        var top = q.Dequeue();
+        Assert.Equal(first.X, top.X);
+        Assert.Equal(first.Y, top.Y);
 
-        lowestPriority = q.Dequeue();
-        Assert.Equal(second.X, lowestPriority.X);
-        Assert.Equal(second.Y, lowestPriority.Y);
+        top = q.Dequeue();
+        Assert.Equal(second.X, top.X);
+        Assert.Equal(second.Y, top.Y);
 
-        lowestPriority = q.Dequeue();
-        Assert.Equal(third.X, lowestPriority.X);
-        Assert.Equal(third.Y, lowestPriority.Y);
+        top = q.Dequeue();
+        Assert.Equal(third.X, top.X);
+        Assert.Equal(third.Y, top.Y);
     }
 
     [Fact]
