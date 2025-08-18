@@ -1,5 +1,9 @@
-﻿internal class HalfEdge
+﻿using Godot;
+
+internal class HalfEdge
 {
+    internal Vector2 _direction;
+
     /// <summary>
     /// Where the edge begins. We don't need to store where it ends
     /// since that can be located via <see cref="Twin.Origin"/>.

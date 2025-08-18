@@ -96,19 +96,11 @@ internal class DiagramGenerator<TQ>
         Vertex breakpoint = new(e.X, a.GetYAt(e.X, e.Y));
         _diagram.Vertices.Add(breakpoint);
 
-        HalfEdge edgeLeft = new()
-        {
-            Origin = breakpoint,
-            IncidentFace = e.Face,
-        };
+        HalfEdge edgeLeft = MakeIncompleteHalfEdge(breakpoint, rightLeaf.Site);
         a._edge = edgeLeft;
         _diagram.Edges.Add(edgeLeft);
 
-        HalfEdge edgeRight = new()
-        {
-            Origin = breakpoint,
-            IncidentFace = rightLeaf.Site.Face,
-        };
+        HalfEdge edgeRight = MakeIncompleteHalfEdge(breakpoint, e);
         a.RightChild._edge = edgeRight;
         _diagram.Edges.Add(edgeRight);
 
@@ -144,7 +136,7 @@ internal class DiagramGenerator<TQ>
         Arc rightArc = middleArc.GetArcToRight(out Arc rightCommonAncestor);
 
         // TODO: This is an error case, it should be treated as such
-        if(leftArc == rightArc) Debug.Print("Single parabola predicted to close another.");
+        if (leftArc == rightArc) Debug.Print("Single parabola predicted to close another.");
 
         // 1a. TODO: Delete the disappearing arc from the beachline
 
@@ -165,7 +157,7 @@ internal class DiagramGenerator<TQ>
         _diagram.Vertices.Add(circumcenter);
 
         // 2b. Update the tuples representing the breakpoints at the internal nodes.
-        leftCommonAncestor._edge.Destination  =
+        leftCommonAncestor._edge.Destination =
         rightCommonAncestor._edge.Destination = circumcenter;
 
         // TODO: Understand
@@ -300,6 +292,34 @@ internal class DiagramGenerator<TQ>
             DisappearingArc = p2
         };
         return true;
+    }
+
+    /// <summary>
+    /// Creates a <see cref="HalfEdge"/> that will be completed (have its destination set)
+    /// when the algorithm completes.
+    /// </summary>
+    /// <param name="origin">Where the edge begins.</param>
+    /// <param name="leftSite">
+    /// Site to the left of this edge - the associated face will be treated as the <see cref="HalfEdge.IncidentFace"/>.
+    /// </param>
+    /// <returns>An incomplete edge to record within the beachline.</returns>
+    private static HalfEdge MakeIncompleteHalfEdge(Vertex origin, SiteEvent leftSite)
+    {
+        // Since the half-edge won't be completed until the end of the algorithm,
+        // we need a way to "predict" the direction of the edge.
+        // Since the breakpoint is directly between two sites and we already receive
+        // the left site, we can calculate the direction vector by rotating the
+        // direction vector from the breakpoint (origin) to the left site by
+        // 90 degrees clockwise.
+        // Rotation by 90 degrees clockwise can be done easily with a simple swizzle i.e.
+        //     (x,y) => (y,-x)
+        Vector2 originToLeft = new(leftSite.X - origin.X, leftSite.Y - leftSite.Y);
+        return new HalfEdge
+        {
+            _direction = new Vector2(originToLeft.Y, -originToLeft.X),
+            Origin = origin,
+            IncidentFace = leftSite.Face
+        };
     }
 }
 
