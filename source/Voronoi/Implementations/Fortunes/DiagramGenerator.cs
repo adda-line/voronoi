@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Voronoi.Extensions;
 
 internal class DiagramGenerator<TQ>
     where TQ : IEventQueue, new()
@@ -231,6 +232,12 @@ internal class DiagramGenerator<TQ>
             Arc arc = edgesToProcess.Pop();
             if (arc.IsLeaf)
                 continue;
+            CompleteEdge(arc._edge, _boundingBoxWidth, _boundingBoxHeight);
+
+            if (arc.LeftChild != null)
+                edgesToProcess.Push(arc.LeftChild);
+            if (arc.RightChild != null)
+                edgesToProcess.Push(arc.RightChild);
         }
     }
 
@@ -294,6 +301,26 @@ internal class DiagramGenerator<TQ>
         return true;
     }
 
+    private void CompleteEdge(HalfEdge edge, float boundingBoxWidth, float boundingBoxHeight)
+    {
+        Debug.Assert(edge._direction.IsNormalized());
+
+        Vector2 originVector = new(edge.Origin.X, edge.Origin.Y);
+
+        Vector2 edgeSign = edge._direction.Sign();
+        Vector2 boundingBox = new(boundingBoxWidth / 2, boundingBoxHeight / 2);
+        Vector2 edgesBeingPointedTowards = edgeSign.Hadamard(boundingBox);
+        Vector2 scalingFactors = edgesBeingPointedTowards.Hadamard(edge._direction.Inverse());
+        float scalingFactor = scalingFactors[(int)scalingFactors.MinAxisIndex()];
+
+        Vector2 boundingBoxCollision = scalingFactor * edge._direction + originVector;
+        Vertex v = new(boundingBoxCollision.X, boundingBoxCollision.X);
+
+        // TODO: Remove original destination?
+        _diagram.Vertices.Add(v);
+        edge.Destination = v;
+    }
+
     /// <summary>
     /// Creates a <see cref="HalfEdge"/> that will be completed (have its destination set)
     /// when the algorithm completes.
@@ -316,7 +343,7 @@ internal class DiagramGenerator<TQ>
         Vector2 originToLeft = new(leftSite.X - origin.X, leftSite.Y - leftSite.Y);
         return new HalfEdge
         {
-            _direction = new Vector2(originToLeft.Y, -originToLeft.X),
+            _direction = new Vector2(originToLeft.Y, -originToLeft.X).Normalized(),
             Origin = origin,
             IncidentFace = leftSite.Face
         };
