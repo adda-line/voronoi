@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("PointQueueTests")]
+[assembly: InternalsVisibleTo("DiagramTests")]
 public class DefaultEventQueue : PriorityQueue<IEvent, IEvent>, IEventQueue
 {
     private class EventComparer : IComparer<IEvent>
@@ -41,5 +42,5 @@ public class DefaultEventQueue : PriorityQueue<IEvent, IEvent>, IEventQueue
         }));
 
     public void Enqueue(IEvent @event) =>
-        Enqueue(@event);
+        Enqueue(@event, @event);
 }

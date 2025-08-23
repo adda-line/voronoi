@@ -1,6 +1,6 @@
 ﻿public interface IEvent
 {
-    int X { get; }
+    float X { get; }
 
-    int Y { get; }
+    float Y { get; }
 }

@@ -232,7 +232,8 @@ internal class DiagramGenerator<TQ>
                 continue;
             Vector2 endpoint = CompleteEdge(arc._edge, _boundingBoxWidth, _boundingBoxHeight);
 
-            // TODO: Delete original destination from diagram?
+            // Delete breakpoint vertex from diagram.
+            _diagram.Vertices.Remove(arc._edge.Destination);
             arc._edge.Destination = new Vertex(endpoint.X, endpoint.Y);
             _diagram.Vertices.Add(arc._edge.Destination);
 
@@ -296,8 +297,8 @@ internal class DiagramGenerator<TQ>
         float circumradius = MathF.Sqrt((b / triangleArea) + circumcenter.LengthSquared());
         circleEvent = new()
         {
-            X = (int)circumcenter.X,
-            Y = (int)(circumcenter.Y + circumradius),
+            X = circumcenter.X,
+            Y = circumcenter.Y + circumradius,
             DisappearingArc = p2
         };
         return true;
