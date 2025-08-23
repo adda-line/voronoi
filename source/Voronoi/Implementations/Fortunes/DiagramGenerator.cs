@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Voronoi.Extensions;
 
 internal class DiagramGenerator<TQ>
@@ -18,13 +17,16 @@ internal class DiagramGenerator<TQ>
 
     private Dcel _diagram = new Dcel();
 
+
+    // TODO: Bounding box is actualy 2x width and height centered at 0,0.
+    //       Should allow the caller to pass in a proper rectangle struct.
     public DiagramGenerator(IEnumerable<Vector2> sites, float boundingBoxWidth, float boundingBoxHeight)
     {
         _boundingBoxWidth = boundingBoxWidth;
         _boundingBoxHeight = boundingBoxHeight;
 
         _eventQueue = new();
-        _eventQueue.Initialize(sites.ToArray());
+        _eventQueue.Initialize([.. sites]);
     }
 
     public Dcel Generate()
@@ -82,13 +84,13 @@ internal class DiagramGenerator<TQ>
         Arc leftLeaf = new(a.Site),
             middleLeaf = new(e),
             rightLeaf = new(a.Site);
-        a.LeftChild = leftLeaf;
+        a.RightChild = rightLeaf;
 
         // New Internal Node
-        a.RightChild = new()
+        a.LeftChild = new()
         {
-            LeftChild = middleLeaf,
-            RightChild = rightLeaf
+            LeftChild = leftLeaf,
+            RightChild = middleLeaf
         };
 
         // 4. Create new half-edge records in the Voronoi diagram structure for the
@@ -97,16 +99,16 @@ internal class DiagramGenerator<TQ>
         Vertex breakpoint = new(e.X, a.GetYAt(e.X, e.Y));
         _diagram.Vertices.Add(breakpoint);
 
-        HalfEdge edgeLeft = MakeIncompleteHalfEdge(breakpoint, rightLeaf.Site);
-        a._edge = edgeLeft;
-        _diagram.Edges.Add(edgeLeft);
+        HalfEdge edgeWithEToLeft = MakeIncompleteHalfEdge(breakpoint, e, rightLeaf.Site);
+        a.LeftChild._edge = edgeWithEToLeft;
+        _diagram.Edges.Add(edgeWithEToLeft);
 
-        HalfEdge edgeRight = MakeIncompleteHalfEdge(breakpoint, e);
-        a.RightChild._edge = edgeRight;
-        _diagram.Edges.Add(edgeRight);
+        HalfEdge edgeWithEToRight = MakeIncompleteHalfEdge(breakpoint, rightLeaf.Site, e);
+        a._edge = edgeWithEToRight;
+        _diagram.Edges.Add(edgeWithEToRight);
 
-        edgeLeft.Twin = edgeRight;
-        edgeRight.Twin = edgeLeft;
+        edgeWithEToLeft.Twin = edgeWithEToRight;
+        edgeWithEToRight.Twin = edgeWithEToLeft;
 
         // 5a. Check the triple of consecutive arcs where the new arc (middleLeaf) for e is the
         //     left arc to see if the breakpoints converge. If so, insert the circle event into Q
@@ -179,11 +181,7 @@ internal class DiagramGenerator<TQ>
         Debug.Assert(earliestAncestor != null);
 
         // TODO: Do I need to delete the existing edge from _diagram?
-        earliestAncestor._edge = new()
-        {
-            Origin = circumcenter,
-            IncidentFace = leftArc.Site.Face,
-        };
+        earliestAncestor._edge = MakeIncompleteHalfEdge(circumcenter, leftArc.Site, rightArc.Site);
         _diagram.Edges.Add(earliestAncestor._edge);
 
         // 3. Remove the middle arc. We do this by replacing the arc and its parent
@@ -232,7 +230,11 @@ internal class DiagramGenerator<TQ>
             Arc arc = edgesToProcess.Pop();
             if (arc.IsLeaf)
                 continue;
-            CompleteEdge(arc._edge, _boundingBoxWidth, _boundingBoxHeight);
+            Vector2 endpoint = CompleteEdge(arc._edge, _boundingBoxWidth, _boundingBoxHeight);
+
+            // TODO: Delete original destination from diagram?
+            arc._edge.Destination = new Vertex(endpoint.X, endpoint.Y);
+            _diagram.Vertices.Add(arc._edge.Destination);
 
             if (arc.LeftChild != null)
                 edgesToProcess.Push(arc.LeftChild);
@@ -301,24 +303,38 @@ internal class DiagramGenerator<TQ>
         return true;
     }
 
-    private void CompleteEdge(HalfEdge edge, float boundingBoxWidth, float boundingBoxHeight)
+    /// <summary>
+    /// Projecs the edge's end-point within the provided bounding-box.
+    /// </summary>
+    /// <remarks>Graph: https://www.desmos.com/calculator/lpavb1npa6</remarks>
+    private static Vector2 CompleteEdge(HalfEdge edge, float boundingBoxWidth, float boundingBoxHeight)
     {
         Debug.Assert(edge._direction.IsNormalized());
 
+        // TODO: Why aren't I using vectors everywhere?
         Vector2 originVector = new(edge.Origin.X, edge.Origin.Y);
 
+        // By figuring out which edges are being pointed towards, we know
+        // where to project the driection's end-point.
         Vector2 edgeSign = edge._direction.Sign();
-        Vector2 boundingBox = new(boundingBoxWidth / 2, boundingBoxHeight / 2);
+        Vector2 boundingBox = new(boundingBoxWidth, boundingBoxHeight);
         Vector2 edgesBeingPointedTowards = edgeSign.Hadamard(boundingBox);
-        Vector2 scalingFactors = edgesBeingPointedTowards.Hadamard(edge._direction.Inverse());
+
+        // Now we figure out how far from the pointed-to horizontal and
+        // vertical bounding box edges.
+        // By dividing that distance by the direction vector components
+        // we can estimate how far we'd travel along the direction vector
+        // until an edge is hit.
+        // The minimum "scaling factor" is the minimum distance either the
+        // x or y component permits travel before collision.
+        Vector2 offsetFromPointedEdges = edgesBeingPointedTowards - originVector;
+        Vector2 scalingFactors = offsetFromPointedEdges.Hadamard(edge._direction.Inverse());
         float scalingFactor = scalingFactors[(int)scalingFactors.MinAxisIndex()];
 
+        // Then we scale the direction vector by the minimum factor and
+        // re-center on the ray's origin.
         Vector2 boundingBoxCollision = scalingFactor * edge._direction + originVector;
-        Vertex v = new(boundingBoxCollision.X, boundingBoxCollision.X);
-
-        // TODO: Remove original destination?
-        _diagram.Vertices.Add(v);
-        edge.Destination = v;
+        return boundingBoxCollision;
     }
 
     /// <summary>
@@ -329,21 +345,20 @@ internal class DiagramGenerator<TQ>
     /// <param name="leftSite">
     /// Site to the left of this edge - the associated face will be treated as the <see cref="HalfEdge.IncidentFace"/>.
     /// </param>
+    /// <param name="rightSite">Site to the right of this edge.</param>
     /// <returns>An incomplete edge to record within the beachline.</returns>
-    private static HalfEdge MakeIncompleteHalfEdge(Vertex origin, SiteEvent leftSite)
+    private static HalfEdge MakeIncompleteHalfEdge(Vertex origin, SiteEvent leftSite, SiteEvent rightSite)
     {
         // Since the half-edge won't be completed until the end of the algorithm,
         // we need a way to "predict" the direction of the edge.
-        // Since the breakpoint is directly between two sites and we already receive
-        // the left site, we can calculate the direction vector by rotating the
-        // direction vector from the breakpoint (origin) to the left site by
-        // 90 degrees clockwise.
-        // Rotation by 90 degrees clockwise can be done easily with a simple swizzle i.e.
-        //     (x,y) => (y,-x)
-        Vector2 originToLeft = new(leftSite.X - origin.X, leftSite.Y - leftSite.Y);
+        // We can calculate the direction vector by rotating the direction vector
+        // from the left site to the right site by -90 degress.
+        // Rotation by 90 degrees ccw can be done easily with a simple swizzle i.e.
+        //     (x,y) => (-y,x)
+        Vector2 leftToRight = new(rightSite.X - leftSite.X, rightSite.Y - leftSite.Y);
         return new HalfEdge
         {
-            _direction = new Vector2(originToLeft.Y, -originToLeft.X).Normalized(),
+            _direction = new Vector2(-leftToRight.Y, leftToRight.X).Normalized(),
             Origin = origin,
             IncidentFace = leftSite.Face
         };
