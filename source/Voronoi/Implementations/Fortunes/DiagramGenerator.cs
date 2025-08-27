@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Voronoi.Extensions;
 
 internal class DiagramGenerator<TQ>
@@ -17,6 +18,7 @@ internal class DiagramGenerator<TQ>
 
     private Dcel _diagram = new Dcel();
 
+    private float _currentSweeplineHeight;
 
     // TODO: Bounding box is actualy 2x width and height centered at 0,0.
     //       Should allow the caller to pass in a proper rectangle struct.
@@ -37,6 +39,7 @@ internal class DiagramGenerator<TQ>
             if (_falseAlarms.Contains(@event))
                 continue;
 
+            _currentSweeplineHeight = @event.Y;
             switch (@event)
             {
                 case SiteEvent site:
@@ -113,19 +116,17 @@ internal class DiagramGenerator<TQ>
         // 5a. Check the triple of consecutive arcs where the new arc (middleLeaf) for e is the
         //     left arc to see if the breakpoints converge. If so, insert the circle event into Q
         //     and add pointers between the node in T and the node in Q.
-        Arc nextArcToTheRight = rightLeaf.GetArcToRight(out _);
-        if (nextArcToTheRight != null &&
-            WillBeCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, out CircleEvent circleEvent))
+        Arc nextArcToTheRight = rightLeaf.GetArcToRight(out Arc commonAncestorOfRightArcs);
+        if (nextArcToTheRight != null)
         {
-            _eventQueue.Enqueue(circleEvent);
+            CheckForCircleEvent(middleLeaf, rightLeaf, nextArcToTheRight, middleLeaf.Parent, commonAncestorOfRightArcs);
         }
 
         // 5b. Do the same for the triple where the new arc (middleLeaf) is the right arc.
-        Arc nextArcToTheLeft = leftLeaf.GetArcToLeft(out _);
-        if (nextArcToTheLeft != null &&
-            WillBeCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, out circleEvent))
+        Arc nextArcToTheLeft = leftLeaf.GetArcToLeft(out Arc commonAncestorOfLeftArcs);
+        if (nextArcToTheLeft != null)
         {
-            _eventQueue.Enqueue(circleEvent);
+            CheckForCircleEvent(nextArcToTheLeft, leftLeaf, middleLeaf, commonAncestorOfLeftArcs, middleLeaf.Parent);
         }
     }
 
@@ -205,18 +206,16 @@ internal class DiagramGenerator<TQ>
         //    If so, insert the corresponding circle event into Q. and set pointers between
         //    the new circle event in Q and the corresponding leaf of T. Do the same for
         //    the triple where the former right neighbor is the middle arc.
-        Arc nextLeftArc = leftArc.GetArcToLeft(out _);
-        if (nextLeftArc != null &&
-            WillBeCircleEvent(nextLeftArc, leftArc, rightArc, out CircleEvent circleEvent))
+        Arc nextLeftArc = leftArc.GetArcToLeft(out Arc commonAncestorOfLeftArcs);
+        if (nextLeftArc != null)
         {
-            _eventQueue.Enqueue(circleEvent);
+            CheckForCircleEvent(nextLeftArc, leftArc, rightArc, commonAncestorOfLeftArcs, earliestAncestor);
         }
 
-        Arc nextRightArc = rightArc.GetArcToRight(out _);
-        if (nextRightArc != null &&
-            WillBeCircleEvent(leftArc, rightArc, nextRightArc, out circleEvent))
+        Arc nextRightArc = rightArc.GetArcToRight(out Arc commonAncestorOfRightArcs);
+        if (nextRightArc != null)
         {
-            _eventQueue.Enqueue(circleEvent);
+            CheckForCircleEvent(leftArc, rightArc, nextRightArc, earliestAncestor, commonAncestorOfRightArcs);
         }
     }
 
@@ -245,23 +244,18 @@ internal class DiagramGenerator<TQ>
     }
 
     /// <summary>
-    /// Detects if the middle parabola, <paramref name="p2"/> will be closed out
-    /// by <paramref name="p1"/> and <paramref name="p3"/>. Creates a circle event
-    /// with the appropriate closure point if so.
+    /// Checks 3 consecutive arcs in the beachline for a potential closure event.
     /// </summary>
-    /// <param name="p1">Left parabola.</param>
-    /// <param name="p2">Middle parabola.</param>
-    /// <param name="p3">Right parabola.</param>
-    /// <param name="circleEvent">Event that represents the closure of <paramref name="p2"/>.</param>
-    /// <returns>True if a closure event is detected, false otherwise.</returns>
-    /// TODO: Add check that middle arc site position is highest since that _probably_ precludes a circle event.
-    private static bool WillBeCircleEvent(Arc p1, Arc p2, Arc p3, out CircleEvent circleEvent)
+    /// <param name="p1">Left-most arc in the beachline.</param>
+    /// <param name="p2">Middle arc in the beachline.</param>
+    /// <param name="p3">Right-most arc in the beachline.</param>
+    /// <param name="p1p2CommonAncestor">The common ancestor b/w <paramref name="p1"/> and <paramref name="p2"/>.</param>
+    /// <param name="p2p3CommonAncestor">The common ancestor b/w <paramref name="p2"/> and <paramref name="p3"/>.</param>
+    private void CheckForCircleEvent(Arc p1, Arc p2, Arc p3, Arc p1p2CommonAncestor, Arc p2p3CommonAncestor)
     {
-        // Assert that the sites are actually left to right.
-        Debug.Assert(p1.Site.X < p2.Site.X);
-        Debug.Assert(p2.Site.X < p3.Site.X);
-
-        circleEvent = null;
+        // One single arc cannot close another.
+        if (p1.Site == p3.Site)
+            return;
 
         // First we need to see if the points are collinear.
         // To do this we need to see if the area of the triangle they make
@@ -271,7 +265,15 @@ internal class DiagramGenerator<TQ>
         Vector3 pointYs = new(p1.Site.Y, p2.Site.Y, p3.Site.Y);
         float triangleArea = new Basis(pointXs, pointYs, Vector3.One).Determinant();
         if (MathF.Abs(triangleArea) < float.Epsilon)
-            return false;
+            return;
+
+        // We check if the p1-p2 and p2-p3 edges will connect.
+        // If the intersection is above the sweepline or not
+        // possible because of the half-edge directions then
+        // a closure event will not occur.
+        if (!WillEdgesIntersect(p1p2CommonAncestor._edge, p2p3CommonAncestor._edge, out Vertex intersection))
+            return;
+        _diagram.Vertices.Add(intersection);
 
         // Now to calculate the circumcenter of these 3 points.
         // The circumcenter is the point that is equidistant from all 3 sites.
@@ -295,13 +297,19 @@ internal class DiagramGenerator<TQ>
         // when the sweep-line encounters the bottom of the circumcircle
         float b = new Basis(pointXs, pointYs, lengthsSqrd).Determinant();
         float circumradius = MathF.Sqrt((b / triangleArea) + circumcenter.LengthSquared());
-        circleEvent = new()
+
+        // If the closure event would occur above the current sweep-line then
+        // we must have already processed that event.
+        float closureEventY = circumcenter.Y - circumradius;
+        if (closureEventY >= _currentSweeplineHeight)
+            return;
+
+        _eventQueue.Enqueue(new CircleEvent()
         {
             X = circumcenter.X,
-            Y = circumcenter.Y + circumradius,
+            Y = circumcenter.Y - circumradius,
             DisappearingArc = p2
-        };
-        return true;
+        });
     }
 
     /// <summary>
@@ -363,6 +371,34 @@ internal class DiagramGenerator<TQ>
             Origin = origin,
             IncidentFace = leftSite.Face
         };
+    }
+
+    private static bool WillEdgesIntersect(HalfEdge a, HalfEdge b, [NotNullWhen(true)] out Vertex intersection)
+    {
+        intersection = null;
+
+        // Now we need to see if the common ancestor edges are pointing towards collision.
+        // TODO: This is horrific, evaluate for efficiency and clarity.
+        Vector2 o0 = new(a.Origin.X, a.Origin.Y);
+        Vector2 d0 = o0 + a._direction;
+
+        Vector2 o1 = new(b.Origin.X, b.Origin.Y);
+        Vector2 d1 = o1 + b._direction;
+
+        // If the origin is the same for both edges then we're looking at the same "whole" edge.
+        if (Mathf.Abs(o0.X - o1.X) < float.Epsilon &&
+            Mathf.Abs(o0.Y - o1.Y) < float.Epsilon)
+            return false;
+
+        // I stole the maths from Wikipedia:
+        //     https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
+        float t = (o0 - o1).Cross(o1 - d1) / (o0 - d0).Cross(o1 - d1);
+        float u = -(o0 - d0).Cross(o0 - o1) / (o0 - d0).Cross(o1 - d1);
+        if (t < 0 || u < 0)
+            return false;
+
+        intersection = o0 + t * (d0 - o0);
+        return true;
     }
 }
 

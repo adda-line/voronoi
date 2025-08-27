@@ -1,4 +1,6 @@
-﻿internal class Vertex
+﻿using Godot;
+
+internal class Vertex
 {
     public float X { get; }
     public float Y { get; }
@@ -13,4 +15,7 @@
         X = x;
         Y = y;
     }
+
+    // TODO: This seems ugly, maybe consolidate the types?
+    public static implicit operator Vertex(Vector2 vec) => new(vec.X, vec.Y);
 }
